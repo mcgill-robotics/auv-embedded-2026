@@ -237,7 +237,7 @@ void batt1(float V1) {
     dtostrf(V1, 4, 1, buffer);
     String voltageText = String(buffer) + "V";
 
-    tft.setTextColor(WHITE);
+    tft.setTextColor(BLACK);
     tft.setTextSize(3);
 
     int16_t x, y;
@@ -275,7 +275,7 @@ void batt2(float V2) {
     dtostrf(V2, 4, 1, buffer);
     String voltageText = String(buffer) + "V";
 
-    tft.setTextColor(WHITE);
+    tft.setTextColor(BLACK);
     tft.setTextSize(3);
 
     int16_t x, y;
