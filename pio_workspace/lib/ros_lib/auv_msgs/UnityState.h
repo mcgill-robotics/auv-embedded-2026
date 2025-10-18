@@ -44,14 +44,14 @@ namespace auv_msgs
       typedef uint32_t _hydrophone_four_freqs_type;
       _hydrophone_four_freqs_type st_hydrophone_four_freqs;
       _hydrophone_four_freqs_type * hydrophone_four_freqs;
-      typedef int32_t _isDVLActive_type;
-      _isDVLActive_type isDVLActive;
-      typedef int32_t _isDepthSensorActive_type;
-      _isDepthSensorActive_type isDepthSensorActive;
-      typedef int32_t _isIMUActive_type;
-      _isIMUActive_type isIMUActive;
-      typedef int32_t _isHydrophonesActive_type;
-      _isHydrophonesActive_type isHydrophonesActive;
+      typedef int32_t _is_dvl_active_type;
+      _is_dvl_active_type is_dvl_active;
+      typedef int32_t _is_depth_sensor_active_type;
+      _is_depth_sensor_active_type is_depth_sensor_active;
+      typedef int32_t _is_imu_active_type;
+      _is_imu_active_type is_imu_active;
+      typedef int32_t _is_hydrophones_active_type;
+      _is_hydrophones_active_type is_hydrophones_active;
 
     UnityState():
       position(),
@@ -64,10 +64,10 @@ namespace auv_msgs
       hydrophone_two_freqs_length(0), st_hydrophone_two_freqs(), hydrophone_two_freqs(nullptr),
       hydrophone_three_freqs_length(0), st_hydrophone_three_freqs(), hydrophone_three_freqs(nullptr),
       hydrophone_four_freqs_length(0), st_hydrophone_four_freqs(), hydrophone_four_freqs(nullptr),
-      isDVLActive(0),
-      isDepthSensorActive(0),
-      isIMUActive(0),
-      isHydrophonesActive(0)
+      is_dvl_active(0),
+      is_depth_sensor_active(0),
+      is_imu_active(0),
+      is_hydrophones_active(0)
     {
     }
 
@@ -147,43 +147,43 @@ namespace auv_msgs
       union {
         int32_t real;
         uint32_t base;
-      } u_isDVLActive;
-      u_isDVLActive.real = this->isDVLActive;
-      *(outbuffer + offset + 0) = (u_isDVLActive.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_isDVLActive.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_isDVLActive.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_isDVLActive.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->isDVLActive);
+      } u_is_dvl_active;
+      u_is_dvl_active.real = this->is_dvl_active;
+      *(outbuffer + offset + 0) = (u_is_dvl_active.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_is_dvl_active.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_is_dvl_active.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_is_dvl_active.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->is_dvl_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isDepthSensorActive;
-      u_isDepthSensorActive.real = this->isDepthSensorActive;
-      *(outbuffer + offset + 0) = (u_isDepthSensorActive.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_isDepthSensorActive.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_isDepthSensorActive.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_isDepthSensorActive.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->isDepthSensorActive);
+      } u_is_depth_sensor_active;
+      u_is_depth_sensor_active.real = this->is_depth_sensor_active;
+      *(outbuffer + offset + 0) = (u_is_depth_sensor_active.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_is_depth_sensor_active.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_is_depth_sensor_active.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_is_depth_sensor_active.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->is_depth_sensor_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isIMUActive;
-      u_isIMUActive.real = this->isIMUActive;
-      *(outbuffer + offset + 0) = (u_isIMUActive.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_isIMUActive.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_isIMUActive.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_isIMUActive.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->isIMUActive);
+      } u_is_imu_active;
+      u_is_imu_active.real = this->is_imu_active;
+      *(outbuffer + offset + 0) = (u_is_imu_active.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_is_imu_active.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_is_imu_active.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_is_imu_active.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->is_imu_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isHydrophonesActive;
-      u_isHydrophonesActive.real = this->isHydrophonesActive;
-      *(outbuffer + offset + 0) = (u_isHydrophonesActive.base >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (u_isHydrophonesActive.base >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (u_isHydrophonesActive.base >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (u_isHydrophonesActive.base >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->isHydrophonesActive);
+      } u_is_hydrophones_active;
+      u_is_hydrophones_active.real = this->is_hydrophones_active;
+      *(outbuffer + offset + 0) = (u_is_hydrophones_active.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_is_hydrophones_active.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_is_hydrophones_active.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_is_hydrophones_active.base >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->is_hydrophones_active);
       return offset;
     }
 
@@ -284,52 +284,52 @@ namespace auv_msgs
       union {
         int32_t real;
         uint32_t base;
-      } u_isDVLActive;
-      u_isDVLActive.base = 0;
-      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->isDVLActive = u_isDVLActive.real;
-      offset += sizeof(this->isDVLActive);
+      } u_is_dvl_active;
+      u_is_dvl_active.base = 0;
+      u_is_dvl_active.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_is_dvl_active.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_is_dvl_active.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_is_dvl_active.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->is_dvl_active = u_is_dvl_active.real;
+      offset += sizeof(this->is_dvl_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isDepthSensorActive;
-      u_isDepthSensorActive.base = 0;
-      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->isDepthSensorActive = u_isDepthSensorActive.real;
-      offset += sizeof(this->isDepthSensorActive);
+      } u_is_depth_sensor_active;
+      u_is_depth_sensor_active.base = 0;
+      u_is_depth_sensor_active.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_is_depth_sensor_active.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_is_depth_sensor_active.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_is_depth_sensor_active.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->is_depth_sensor_active = u_is_depth_sensor_active.real;
+      offset += sizeof(this->is_depth_sensor_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isIMUActive;
-      u_isIMUActive.base = 0;
-      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->isIMUActive = u_isIMUActive.real;
-      offset += sizeof(this->isIMUActive);
+      } u_is_imu_active;
+      u_is_imu_active.base = 0;
+      u_is_imu_active.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_is_imu_active.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_is_imu_active.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_is_imu_active.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->is_imu_active = u_is_imu_active.real;
+      offset += sizeof(this->is_imu_active);
       union {
         int32_t real;
         uint32_t base;
-      } u_isHydrophonesActive;
-      u_isHydrophonesActive.base = 0;
-      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
-      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      this->isHydrophonesActive = u_isHydrophonesActive.real;
-      offset += sizeof(this->isHydrophonesActive);
+      } u_is_hydrophones_active;
+      u_is_hydrophones_active.base = 0;
+      u_is_hydrophones_active.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_is_hydrophones_active.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_is_hydrophones_active.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_is_hydrophones_active.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      this->is_hydrophones_active = u_is_hydrophones_active.real;
+      offset += sizeof(this->is_hydrophones_active);
      return offset;
     }
 
     virtual const char * getType() override { return "auv_msgs/UnityState"; };
-    virtual const char * getMD5() override { return "deac3cf7620639c22bbe228fb39d2aa6"; };
+    virtual const char * getMD5() override { return "6690d8ec41fe154591da2cf6b44a9f06"; };
 
   };
 

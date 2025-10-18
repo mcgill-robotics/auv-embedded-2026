@@ -4,10 +4,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "ros/time.h"
+#include "ros/duration.h"
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Wrench.h"
-#include "ros/duration.h"
+#include "ros/time.h"
 
 namespace gazebo_msgs
 {

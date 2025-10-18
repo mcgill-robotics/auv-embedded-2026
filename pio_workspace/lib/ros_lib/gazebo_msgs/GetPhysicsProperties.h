@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ros/msg.h"
-#include "gazebo_msgs/ODEPhysics.h"
 #include "geometry_msgs/Vector3.h"
+#include "gazebo_msgs/ODEPhysics.h"
 
 namespace gazebo_msgs
 {
