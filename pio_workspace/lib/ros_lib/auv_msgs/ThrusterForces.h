@@ -12,65 +12,65 @@ namespace auv_msgs
   class ThrusterForces : public ros::Msg
   {
     public:
-      typedef float _BACK_LEFT_type;
-      _BACK_LEFT_type BACK_LEFT;
-      typedef float _HEAVE_BACK_LEFT_type;
-      _HEAVE_BACK_LEFT_type HEAVE_BACK_LEFT;
-      typedef float _HEAVE_FRONT_LEFT_type;
-      _HEAVE_FRONT_LEFT_type HEAVE_FRONT_LEFT;
-      typedef float _FRONT_LEFT_type;
-      _FRONT_LEFT_type FRONT_LEFT;
-      typedef float _FRONT_RIGHT_type;
-      _FRONT_RIGHT_type FRONT_RIGHT;
-      typedef float _HEAVE_FRONT_RIGHT_type;
-      _HEAVE_FRONT_RIGHT_type HEAVE_FRONT_RIGHT;
-      typedef float _HEAVE_BACK_RIGHT_type;
-      _HEAVE_BACK_RIGHT_type HEAVE_BACK_RIGHT;
-      typedef float _BACK_RIGHT_type;
-      _BACK_RIGHT_type BACK_RIGHT;
+      typedef float _front_left_type;
+      _front_left_type front_left;
+      typedef float _back_left_type;
+      _back_left_type back_left;
+      typedef float _heave_back_left_type;
+      _heave_back_left_type heave_back_left;
+      typedef float _heave_front_left_type;
+      _heave_front_left_type heave_front_left;
+      typedef float _front_right_type;
+      _front_right_type front_right;
+      typedef float _heave_front_right_type;
+      _heave_front_right_type heave_front_right;
+      typedef float _back_right_type;
+      _back_right_type back_right;
+      typedef float _heave_back_right_type;
+      _heave_back_right_type heave_back_right;
 
     ThrusterForces():
-      BACK_LEFT(0),
-      HEAVE_BACK_LEFT(0),
-      HEAVE_FRONT_LEFT(0),
-      FRONT_LEFT(0),
-      FRONT_RIGHT(0),
-      HEAVE_FRONT_RIGHT(0),
-      HEAVE_BACK_RIGHT(0),
-      BACK_RIGHT(0)
+      front_left(0),
+      back_left(0),
+      heave_back_left(0),
+      heave_front_left(0),
+      front_right(0),
+      heave_front_right(0),
+      back_right(0),
+      heave_back_right(0)
     {
     }
 
     virtual int serialize(unsigned char *outbuffer) const override
     {
       int offset = 0;
-      offset += serializeAvrFloat64(outbuffer + offset, this->BACK_LEFT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->HEAVE_BACK_LEFT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->HEAVE_FRONT_LEFT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->FRONT_LEFT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->FRONT_RIGHT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->HEAVE_FRONT_RIGHT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->HEAVE_BACK_RIGHT);
-      offset += serializeAvrFloat64(outbuffer + offset, this->BACK_RIGHT);
+      offset += serializeAvrFloat64(outbuffer + offset, this->front_left);
+      offset += serializeAvrFloat64(outbuffer + offset, this->back_left);
+      offset += serializeAvrFloat64(outbuffer + offset, this->heave_back_left);
+      offset += serializeAvrFloat64(outbuffer + offset, this->heave_front_left);
+      offset += serializeAvrFloat64(outbuffer + offset, this->front_right);
+      offset += serializeAvrFloat64(outbuffer + offset, this->heave_front_right);
+      offset += serializeAvrFloat64(outbuffer + offset, this->back_right);
+      offset += serializeAvrFloat64(outbuffer + offset, this->heave_back_right);
       return offset;
     }
 
     virtual int deserialize(unsigned char *inbuffer) override
     {
       int offset = 0;
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->BACK_LEFT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->HEAVE_BACK_LEFT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->HEAVE_FRONT_LEFT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->FRONT_LEFT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->FRONT_RIGHT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->HEAVE_FRONT_RIGHT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->HEAVE_BACK_RIGHT));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->BACK_RIGHT));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->front_left));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->back_left));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->heave_back_left));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->heave_front_left));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->front_right));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->heave_front_right));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->back_right));
+      offset += deserializeAvrFloat64(inbuffer + offset, &(this->heave_back_right));
      return offset;
     }
 
     virtual const char * getType() override { return "auv_msgs/ThrusterForces"; };
-    virtual const char * getMD5() override { return "3852caff2b3aec4312af1b5ef825391d"; };
+    virtual const char * getMD5() override { return "87d1913726f1a30a5009c3771816b687"; };
 
   };
 

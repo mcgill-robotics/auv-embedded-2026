@@ -28,22 +28,22 @@ namespace auv_msgs
       typedef int32_t _frequencies_type;
       _frequencies_type st_frequencies;
       _frequencies_type * frequencies;
-      uint32_t times_pinger_1_length;
-      typedef uint32_t _times_pinger_1_type;
-      _times_pinger_1_type st_times_pinger_1;
-      _times_pinger_1_type * times_pinger_1;
-      uint32_t times_pinger_2_length;
-      typedef uint32_t _times_pinger_2_type;
-      _times_pinger_2_type st_times_pinger_2;
-      _times_pinger_2_type * times_pinger_2;
-      uint32_t times_pinger_3_length;
-      typedef uint32_t _times_pinger_3_type;
-      _times_pinger_3_type st_times_pinger_3;
-      _times_pinger_3_type * times_pinger_3;
-      uint32_t times_pinger_4_length;
-      typedef uint32_t _times_pinger_4_type;
-      _times_pinger_4_type st_times_pinger_4;
-      _times_pinger_4_type * times_pinger_4;
+      uint32_t hydrophone_one_freqs_length;
+      typedef uint32_t _hydrophone_one_freqs_type;
+      _hydrophone_one_freqs_type st_hydrophone_one_freqs;
+      _hydrophone_one_freqs_type * hydrophone_one_freqs;
+      uint32_t hydrophone_two_freqs_length;
+      typedef uint32_t _hydrophone_two_freqs_type;
+      _hydrophone_two_freqs_type st_hydrophone_two_freqs;
+      _hydrophone_two_freqs_type * hydrophone_two_freqs;
+      uint32_t hydrophone_three_freqs_length;
+      typedef uint32_t _hydrophone_three_freqs_type;
+      _hydrophone_three_freqs_type st_hydrophone_three_freqs;
+      _hydrophone_three_freqs_type * hydrophone_three_freqs;
+      uint32_t hydrophone_four_freqs_length;
+      typedef uint32_t _hydrophone_four_freqs_type;
+      _hydrophone_four_freqs_type st_hydrophone_four_freqs;
+      _hydrophone_four_freqs_type * hydrophone_four_freqs;
       typedef int32_t _isDVLActive_type;
       _isDVLActive_type isDVLActive;
       typedef int32_t _isDepthSensorActive_type;
@@ -60,10 +60,10 @@ namespace auv_msgs
       angular_velocity(),
       linear_acceleration(),
       frequencies_length(0), st_frequencies(), frequencies(nullptr),
-      times_pinger_1_length(0), st_times_pinger_1(), times_pinger_1(nullptr),
-      times_pinger_2_length(0), st_times_pinger_2(), times_pinger_2(nullptr),
-      times_pinger_3_length(0), st_times_pinger_3(), times_pinger_3(nullptr),
-      times_pinger_4_length(0), st_times_pinger_4(), times_pinger_4(nullptr),
+      hydrophone_one_freqs_length(0), st_hydrophone_one_freqs(), hydrophone_one_freqs(nullptr),
+      hydrophone_two_freqs_length(0), st_hydrophone_two_freqs(), hydrophone_two_freqs(nullptr),
+      hydrophone_three_freqs_length(0), st_hydrophone_three_freqs(), hydrophone_three_freqs(nullptr),
+      hydrophone_four_freqs_length(0), st_hydrophone_four_freqs(), hydrophone_four_freqs(nullptr),
       isDVLActive(0),
       isDepthSensorActive(0),
       isIMUActive(0),
@@ -96,53 +96,53 @@ namespace auv_msgs
       *(outbuffer + offset + 3) = (u_frequenciesi.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->frequencies[i]);
       }
-      *(outbuffer + offset + 0) = (this->times_pinger_1_length >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_1_length >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_1_length >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_1_length >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_1_length);
-      for( uint32_t i = 0; i < times_pinger_1_length; i++){
-      *(outbuffer + offset + 0) = (this->times_pinger_1[i] >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_1[i] >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_1[i] >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_1[i] >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_1[i]);
+      *(outbuffer + offset + 0) = (this->hydrophone_one_freqs_length >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_one_freqs_length >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_one_freqs_length >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_one_freqs_length >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_one_freqs_length);
+      for( uint32_t i = 0; i < hydrophone_one_freqs_length; i++){
+      *(outbuffer + offset + 0) = (this->hydrophone_one_freqs[i] >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_one_freqs[i] >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_one_freqs[i] >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_one_freqs[i] >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_one_freqs[i]);
       }
-      *(outbuffer + offset + 0) = (this->times_pinger_2_length >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_2_length >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_2_length >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_2_length >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_2_length);
-      for( uint32_t i = 0; i < times_pinger_2_length; i++){
-      *(outbuffer + offset + 0) = (this->times_pinger_2[i] >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_2[i] >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_2[i] >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_2[i] >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_2[i]);
+      *(outbuffer + offset + 0) = (this->hydrophone_two_freqs_length >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_two_freqs_length >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_two_freqs_length >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_two_freqs_length >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_two_freqs_length);
+      for( uint32_t i = 0; i < hydrophone_two_freqs_length; i++){
+      *(outbuffer + offset + 0) = (this->hydrophone_two_freqs[i] >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_two_freqs[i] >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_two_freqs[i] >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_two_freqs[i] >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_two_freqs[i]);
       }
-      *(outbuffer + offset + 0) = (this->times_pinger_3_length >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_3_length >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_3_length >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_3_length >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_3_length);
-      for( uint32_t i = 0; i < times_pinger_3_length; i++){
-      *(outbuffer + offset + 0) = (this->times_pinger_3[i] >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_3[i] >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_3[i] >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_3[i] >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_3[i]);
+      *(outbuffer + offset + 0) = (this->hydrophone_three_freqs_length >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_three_freqs_length >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_three_freqs_length >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_three_freqs_length >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_three_freqs_length);
+      for( uint32_t i = 0; i < hydrophone_three_freqs_length; i++){
+      *(outbuffer + offset + 0) = (this->hydrophone_three_freqs[i] >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_three_freqs[i] >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_three_freqs[i] >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_three_freqs[i] >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_three_freqs[i]);
       }
-      *(outbuffer + offset + 0) = (this->times_pinger_4_length >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_4_length >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_4_length >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_4_length >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_4_length);
-      for( uint32_t i = 0; i < times_pinger_4_length; i++){
-      *(outbuffer + offset + 0) = (this->times_pinger_4[i] >> (8 * 0)) & 0xFF;
-      *(outbuffer + offset + 1) = (this->times_pinger_4[i] >> (8 * 1)) & 0xFF;
-      *(outbuffer + offset + 2) = (this->times_pinger_4[i] >> (8 * 2)) & 0xFF;
-      *(outbuffer + offset + 3) = (this->times_pinger_4[i] >> (8 * 3)) & 0xFF;
-      offset += sizeof(this->times_pinger_4[i]);
+      *(outbuffer + offset + 0) = (this->hydrophone_four_freqs_length >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_four_freqs_length >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_four_freqs_length >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_four_freqs_length >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_four_freqs_length);
+      for( uint32_t i = 0; i < hydrophone_four_freqs_length; i++){
+      *(outbuffer + offset + 0) = (this->hydrophone_four_freqs[i] >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (this->hydrophone_four_freqs[i] >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (this->hydrophone_four_freqs[i] >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (this->hydrophone_four_freqs[i] >> (8 * 3)) & 0xFF;
+      offset += sizeof(this->hydrophone_four_freqs[i]);
       }
       union {
         int32_t real;
@@ -217,69 +217,69 @@ namespace auv_msgs
       offset += sizeof(this->st_frequencies);
         memcpy( &(this->frequencies[i]), &(this->st_frequencies), sizeof(int32_t));
       }
-      uint32_t times_pinger_1_lengthT = ((uint32_t) (*(inbuffer + offset))); 
-      times_pinger_1_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
-      times_pinger_1_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
-      times_pinger_1_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
-      offset += sizeof(this->times_pinger_1_length);
-      if(times_pinger_1_lengthT > times_pinger_1_length)
-        this->times_pinger_1 = (uint32_t*)realloc(this->times_pinger_1, times_pinger_1_lengthT * sizeof(uint32_t));
-      times_pinger_1_length = times_pinger_1_lengthT;
-      for( uint32_t i = 0; i < times_pinger_1_length; i++){
-      this->st_times_pinger_1 =  ((uint32_t) (*(inbuffer + offset)));
-      this->st_times_pinger_1 |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      this->st_times_pinger_1 |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      this->st_times_pinger_1 |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      offset += sizeof(this->st_times_pinger_1);
-        memcpy( &(this->times_pinger_1[i]), &(this->st_times_pinger_1), sizeof(uint32_t));
+      uint32_t hydrophone_one_freqs_lengthT = ((uint32_t) (*(inbuffer + offset))); 
+      hydrophone_one_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
+      hydrophone_one_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
+      hydrophone_one_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
+      offset += sizeof(this->hydrophone_one_freqs_length);
+      if(hydrophone_one_freqs_lengthT > hydrophone_one_freqs_length)
+        this->hydrophone_one_freqs = (uint32_t*)realloc(this->hydrophone_one_freqs, hydrophone_one_freqs_lengthT * sizeof(uint32_t));
+      hydrophone_one_freqs_length = hydrophone_one_freqs_lengthT;
+      for( uint32_t i = 0; i < hydrophone_one_freqs_length; i++){
+      this->st_hydrophone_one_freqs =  ((uint32_t) (*(inbuffer + offset)));
+      this->st_hydrophone_one_freqs |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      this->st_hydrophone_one_freqs |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      this->st_hydrophone_one_freqs |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      offset += sizeof(this->st_hydrophone_one_freqs);
+        memcpy( &(this->hydrophone_one_freqs[i]), &(this->st_hydrophone_one_freqs), sizeof(uint32_t));
       }
-      uint32_t times_pinger_2_lengthT = ((uint32_t) (*(inbuffer + offset))); 
-      times_pinger_2_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
-      times_pinger_2_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
-      times_pinger_2_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
-      offset += sizeof(this->times_pinger_2_length);
-      if(times_pinger_2_lengthT > times_pinger_2_length)
-        this->times_pinger_2 = (uint32_t*)realloc(this->times_pinger_2, times_pinger_2_lengthT * sizeof(uint32_t));
-      times_pinger_2_length = times_pinger_2_lengthT;
-      for( uint32_t i = 0; i < times_pinger_2_length; i++){
-      this->st_times_pinger_2 =  ((uint32_t) (*(inbuffer + offset)));
-      this->st_times_pinger_2 |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      this->st_times_pinger_2 |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      this->st_times_pinger_2 |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      offset += sizeof(this->st_times_pinger_2);
-        memcpy( &(this->times_pinger_2[i]), &(this->st_times_pinger_2), sizeof(uint32_t));
+      uint32_t hydrophone_two_freqs_lengthT = ((uint32_t) (*(inbuffer + offset))); 
+      hydrophone_two_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
+      hydrophone_two_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
+      hydrophone_two_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
+      offset += sizeof(this->hydrophone_two_freqs_length);
+      if(hydrophone_two_freqs_lengthT > hydrophone_two_freqs_length)
+        this->hydrophone_two_freqs = (uint32_t*)realloc(this->hydrophone_two_freqs, hydrophone_two_freqs_lengthT * sizeof(uint32_t));
+      hydrophone_two_freqs_length = hydrophone_two_freqs_lengthT;
+      for( uint32_t i = 0; i < hydrophone_two_freqs_length; i++){
+      this->st_hydrophone_two_freqs =  ((uint32_t) (*(inbuffer + offset)));
+      this->st_hydrophone_two_freqs |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      this->st_hydrophone_two_freqs |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      this->st_hydrophone_two_freqs |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      offset += sizeof(this->st_hydrophone_two_freqs);
+        memcpy( &(this->hydrophone_two_freqs[i]), &(this->st_hydrophone_two_freqs), sizeof(uint32_t));
       }
-      uint32_t times_pinger_3_lengthT = ((uint32_t) (*(inbuffer + offset))); 
-      times_pinger_3_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
-      times_pinger_3_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
-      times_pinger_3_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
-      offset += sizeof(this->times_pinger_3_length);
-      if(times_pinger_3_lengthT > times_pinger_3_length)
-        this->times_pinger_3 = (uint32_t*)realloc(this->times_pinger_3, times_pinger_3_lengthT * sizeof(uint32_t));
-      times_pinger_3_length = times_pinger_3_lengthT;
-      for( uint32_t i = 0; i < times_pinger_3_length; i++){
-      this->st_times_pinger_3 =  ((uint32_t) (*(inbuffer + offset)));
-      this->st_times_pinger_3 |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      this->st_times_pinger_3 |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      this->st_times_pinger_3 |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      offset += sizeof(this->st_times_pinger_3);
-        memcpy( &(this->times_pinger_3[i]), &(this->st_times_pinger_3), sizeof(uint32_t));
+      uint32_t hydrophone_three_freqs_lengthT = ((uint32_t) (*(inbuffer + offset))); 
+      hydrophone_three_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
+      hydrophone_three_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
+      hydrophone_three_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
+      offset += sizeof(this->hydrophone_three_freqs_length);
+      if(hydrophone_three_freqs_lengthT > hydrophone_three_freqs_length)
+        this->hydrophone_three_freqs = (uint32_t*)realloc(this->hydrophone_three_freqs, hydrophone_three_freqs_lengthT * sizeof(uint32_t));
+      hydrophone_three_freqs_length = hydrophone_three_freqs_lengthT;
+      for( uint32_t i = 0; i < hydrophone_three_freqs_length; i++){
+      this->st_hydrophone_three_freqs =  ((uint32_t) (*(inbuffer + offset)));
+      this->st_hydrophone_three_freqs |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      this->st_hydrophone_three_freqs |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      this->st_hydrophone_three_freqs |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      offset += sizeof(this->st_hydrophone_three_freqs);
+        memcpy( &(this->hydrophone_three_freqs[i]), &(this->st_hydrophone_three_freqs), sizeof(uint32_t));
       }
-      uint32_t times_pinger_4_lengthT = ((uint32_t) (*(inbuffer + offset))); 
-      times_pinger_4_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
-      times_pinger_4_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
-      times_pinger_4_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
-      offset += sizeof(this->times_pinger_4_length);
-      if(times_pinger_4_lengthT > times_pinger_4_length)
-        this->times_pinger_4 = (uint32_t*)realloc(this->times_pinger_4, times_pinger_4_lengthT * sizeof(uint32_t));
-      times_pinger_4_length = times_pinger_4_lengthT;
-      for( uint32_t i = 0; i < times_pinger_4_length; i++){
-      this->st_times_pinger_4 =  ((uint32_t) (*(inbuffer + offset)));
-      this->st_times_pinger_4 |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
-      this->st_times_pinger_4 |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
-      this->st_times_pinger_4 |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
-      offset += sizeof(this->st_times_pinger_4);
-        memcpy( &(this->times_pinger_4[i]), &(this->st_times_pinger_4), sizeof(uint32_t));
+      uint32_t hydrophone_four_freqs_lengthT = ((uint32_t) (*(inbuffer + offset))); 
+      hydrophone_four_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
+      hydrophone_four_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
+      hydrophone_four_freqs_lengthT |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3); 
+      offset += sizeof(this->hydrophone_four_freqs_length);
+      if(hydrophone_four_freqs_lengthT > hydrophone_four_freqs_length)
+        this->hydrophone_four_freqs = (uint32_t*)realloc(this->hydrophone_four_freqs, hydrophone_four_freqs_lengthT * sizeof(uint32_t));
+      hydrophone_four_freqs_length = hydrophone_four_freqs_lengthT;
+      for( uint32_t i = 0; i < hydrophone_four_freqs_length; i++){
+      this->st_hydrophone_four_freqs =  ((uint32_t) (*(inbuffer + offset)));
+      this->st_hydrophone_four_freqs |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      this->st_hydrophone_four_freqs |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      this->st_hydrophone_four_freqs |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      offset += sizeof(this->st_hydrophone_four_freqs);
+        memcpy( &(this->hydrophone_four_freqs[i]), &(this->st_hydrophone_four_freqs), sizeof(uint32_t));
       }
       union {
         int32_t real;
@@ -329,7 +329,7 @@ namespace auv_msgs
     }
 
     virtual const char * getType() override { return "auv_msgs/UnityState"; };
-    virtual const char * getMD5() override { return "eafbb66a66e394412e0b607bd4a7ddd3"; };
+    virtual const char * getMD5() override { return "deac3cf7620639c22bbe228fb39d2aa6"; };
 
   };
 
