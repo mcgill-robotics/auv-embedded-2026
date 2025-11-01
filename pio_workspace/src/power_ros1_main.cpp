@@ -24,14 +24,14 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 #include <std_msgs/Float32.h>
 
 // defines thruster pins
-#define BACK_L_PIN 2
-#define HEAVE_BACK_L_PIN 3
-#define HEAVE_FRONT_L_PIN 4
-#define FRONT_L_PIN 5
-#define FRONT_R_PIN 6
-#define HEAVE_FRONT_R_PIN 7
-#define HEAVE_BACK_R_PIN 8
-#define BACK_R_PIN 9
+#define BACK_L_PIN 9
+#define HEAVE_BACK_L_PIN 8
+#define HEAVE_FRONT_L_PIN 7
+#define FRONT_L_PIN 6
+#define FRONT_R_PIN 5
+#define HEAVE_FRONT_R_PIN 4
+#define HEAVE_BACK_R_PIN 3
+#define BACK_R_PIN 2
 
 #define LED_PIN 13
 
