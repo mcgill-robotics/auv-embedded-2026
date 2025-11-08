@@ -12,6 +12,8 @@
 #include "power_ros1_main.h"
 #elif THRUSTER_TESTS_H
 #include "thruster_tests_main.h"
+#elif ACTUATOR_HR2
+#include "actuator_mainRos2.h"
 #endif
 
 void setup() {
@@ -27,6 +29,8 @@ void setup() {
     power_ros1_setup();
   #elif THRUSTER_TESTS_H
     thruster_tests_setup();
+  #elif ACTUATOR_HR2
+    actuator2_setup()
   #endif
 }
 
@@ -43,5 +47,7 @@ void loop() {
     power_ros1_loop();
   #elif THRUSTER_TESTS_H
     thruster_tests_loop();
-  #endif
+  #elif ACTUATOR_HR2
+    actuator2_loop()
+#endif
 }

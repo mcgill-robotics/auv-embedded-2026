@@ -1,6 +1,6 @@
 #ifdef ACTUATOR_HR2
 
-#include "actuator_main.h"
+#include "actuator_mainRos2.h"
 
 #include <Arduino.h>
 #include <Servo.h>
@@ -101,7 +101,7 @@ void servoSweep_CB(const void *msgin)
 }
 
 // setup function
-void actuator_setup()
+void actuator2_setup()
 {
   // Configure serial transport for micro-ROS - required before any ROS2 operations
   set_microros_transports();
@@ -168,7 +168,7 @@ void actuator_setup()
 }
 
 // Main loop - executor handles callbacks automatically
-void actuator_loop()
+void actuator2_loop()
 {
   // Spin executor to process callbacks - replaces nh.spinOnce()
   // RCL_MS_TO_NS converts milliseconds to nanoseconds (ROS2 uses nanosecond timing)

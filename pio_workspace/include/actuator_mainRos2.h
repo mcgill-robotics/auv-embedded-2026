@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-void actuator_setup();
-void actuator_loop();
+void actuator2_setup();
+void actuator2_loop();
 
 #endif
