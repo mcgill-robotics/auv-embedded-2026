@@ -30,7 +30,7 @@ void setup() {
   #elif THRUSTER_TESTS_H
     thruster_tests_setup();
   #elif ACTUATOR_HR2
-    actuator2_setup()
+    actuator2_setup();
   #endif
 }
 
@@ -48,6 +48,6 @@ void loop() {
   #elif THRUSTER_TESTS_H
     thruster_tests_loop();
   #elif ACTUATOR_HR2
-    actuator2_loop()
-#endif
+    actuator2_loop();
+  #endif
 }
