@@ -1,4 +1,4 @@
-#ifdef ACTUATOR_H
+#ifdef ACTUATOR_HR2
 
 #include "actuator_main.h"
 

@@ -1,4 +1,4 @@
-#ifdef ACTUATOR_HR2
+#ifdef ACTUATOR_HR3
 
 #include "actuator_mainRos2.h"
 
