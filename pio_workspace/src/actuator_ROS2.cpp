@@ -167,7 +167,7 @@ void destroy_entities()
 // -------------------------------
 // SETUP
 // -------------------------------
-void actuator_setup()
+void actuator2_setup()
 {
   pinMode(LED_PIN, OUTPUT);
 
@@ -190,7 +190,7 @@ void actuator_setup()
 // -------------------------------
 // MAIN LOOP
 // -------------------------------
-void actuator_loop()
+void actuator2_loop()
 {
   switch(state)
   {
