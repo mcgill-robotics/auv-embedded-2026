@@ -4,694 +4,249 @@
 
 #include "SPI.h"
 #include "Adafruit_GFX.h"
-#include <iostream>
 #include "Adafruit_ILI9341.h"
 #include "XPT2046_Touchscreen.h"
-#include <SPI.h>       
-#include <Adafruit_ILI9341.h>
-#include <XPT2046_Touchscreen.h>
 #include <Wire.h>
 #include "MS5837.h"
-#include <ros.h>
-#include <auv_msgs/ThrusterMicroseconds.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Float64.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/String.h>
-#include <cmath>
 
-// Forward declarations (tell the compiler these functions exist)
-void initMainPage();
-void handleTouch();
+// COPIED THIS FROM POWER BOARD CODE 
+#include <micro_ros_arduino.h>
+#include <rcl/rcl.h>
+#include <rcl/error_handling.h>
+#include <rclc/rclc.h>
+#include <rclc/executor.h>
+#include <rmw_microros/rmw_microros.h>
+#include <std_msgs/msg/float64.h>
 
-// Pin Definitions
+// Display pins definition
 #define TFT_DC 9
 #define TFT_CS 10
 #define TOUCH_CS 8
 #define TOUCH_IRQ 2
 
-// Create objects for display and touchscreen
+// Displauy and touchscreen objects
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
-
-// Colors
-#define BATTERY_COLOR ILI9341_RED
-#define NUM_COLOR ILI9341_CYAN
-#define LABEL_COLOR ILI9341_RED
-#define MAIN_RECT_COLOR ILI9341_WHITE
-#define DRY_TEST_COLOR ILI9341_GREEN
-#define BACKGROUND_COLOR ILI9341_BLACK
-
-#define BLACK 0x0000
-#define BLUE 0x001F
-#define RED 0xF800
-#define GREEN 0x07E0
-#define CYAN 0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW 0xFFE0
-#define WHITE 0xFFFF
-#define DARK_GRAY 0x2104
-#define LIGHT_GRAY 0xC618
-
-// Display dimensions
-#define HEIGHT 240
-#define WIDTH 320
-#define ILI9341_ROTATION_270 1
-#define THRUSTER_SPEED 1540
-#define MOVING_AVERAGE_SAMPLES 10
-
-// Initialize sensor object
 MS5837 sensor;
 
-// ROS Node Handle
-ros::NodeHandle nh;
+// Power board led pin (not sure if needed)
+#define LED_PIN 13
 
-// ===== Battery/Tether Variables =====
-int tether_new = 0;
-int tether_old = -1;
-int dual_batt_old = -1;
-float batt_voltage_1_new = 0.0;
-float batt_voltage_2_new = 0.0;
-float voltages_old[] = { -1, -1 };
-float voltages_new[] = { -1, -1 };
-uint16_t batt_colours[] = { WHITE, WHITE };
-float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
-int voltage_buffer_index1 = 0;
-float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
-int voltage_buffer_index2 = 0;
+// Depth publishers (instead of power publishers)
+rcl_publisher_t sensors_depth_publisher;
+std_msgs__msg__Float64 sensors_depth_msg;
 
-String status_new = "Touch 2nd row for surprise";
-String status_old = "";
+// COPIED EXACTLY FROM POWER BOARD 
+rclc_executor_t executor;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rcl_timer_t timer;
 
-// ===== Thruster/Devices Variables =====
-uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
-int Sthrusters[8];
-int devices_new[] = { 0, 0, 0, 0, 0, 0, 0 };
-int thrusters_new[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
-float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
-bool wasTouched = false;
-bool isInDryTestMode = false;
-int thruster_states[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+#define EXECUTE_EVERY_N_MS(MS, X) do { \
+  static volatile int64_t init = -1; \
+  if (init == -1) { init = uxr_millis();} \
+  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
+} while (0)
 
-// ROS Messages
-auv_msgs::ThrusterMicroseconds cmd_msg;
-auv_msgs::ThrusterMicroseconds reset_cmd;
-std_msgs::Float64 depth_msg;
 
-// Button structure
-struct Button {
-  int x, y, width, height;
-  uint16_t color;
-  String label;
-};
+enum states {
+  WAITING_AGENT,
+  AGENT_AVAILABLE, 
+  AGENT_CONNECTED,
+  AGENT_DISCONNECTED
+} state;
 
-// Main page buttons
-Button buttons[] = {
-  {0, 0, 155, 50, BATTERY_COLOR, "0.0V"},
-  {160, 0, 155, 50, BATTERY_COLOR, "0.0V"},
-  {0, 110, 44, 48, LABEL_COLOR, "IMU"},
-  {46, 110, 44, 48, LABEL_COLOR, "P"},
-  {92, 110, 44, 48, LABEL_COLOR, "H"},
-  {138, 110, 44, 48, LABEL_COLOR, "A"},
-  {184, 110, 44, 48, LABEL_COLOR, "FC"},
-  {230, 110, 44, 48, LABEL_COLOR, "DC"},
-  {276, 110, 44, 48, LABEL_COLOR, "DVL"},
-  {0, 164, 320, 30, MAIN_RECT_COLOR, status_new},
-  {0, 200, 78, 35, RED, "T"},
-  {80, 200, 78, 35, RED, "DB"},
-  {160, 200, 78, 35, RED, "Celine"},
-  {240, 200, 78, 35, RED, "Mia"},
-};
 
-// Thruster buttons for main page
-Button buttons_thrusters[] = {
-  {0, 55, 38, 50, NUM_COLOR, "1"},
-  {40, 55, 38, 50, NUM_COLOR, "2"},
-  {80, 55, 38, 50, NUM_COLOR, "3"},
-  {120, 55, 38, 50, NUM_COLOR, "4"},
-  {160, 55, 38, 50, NUM_COLOR, "5"},
-  {200, 55, 38, 50, NUM_COLOR, "6"},
-  {240, 55, 38, 50, NUM_COLOR, "7"},
-  {280, 55, 38, 50, NUM_COLOR, "8"},
-};
-
-// ===== ROS Publishers =====
-ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
-ros::Publisher pub("/propulsion/microseconds", &cmd_msg);
-
-// ===== Battery/Tether Functions =====
-void tetherStatusMessageCallback(const std_msgs::Int32& msg) {
-  tether_new = msg.data;
+void error_loop() {
+    int error = 0;
+    while (error < 10) {
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+        delay(100);
+        error++;
+    }
+    digitalWrite(LED_PIN, HIGH);
 }
 
-void battery1Callback(const std_msgs::Float32& msg) {
-  batt_voltage_1_new = msg.data;
+// COPIED FROM POWER BOARD STOP 
+
+
+//DEPTH TIMER CALLBACK
+void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
+  RCLC_UNUSED(last_call_time);
+  if (timer != NULL) {
+    sensor.read();
+    sensors_depth_msg.data = sensor.depth();
+    RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
+    
+    // Debug print in case you need it if it bugs or smt
+    Serial.print("Published depth: ");
+    Serial.println(sensors_depth_msg.data);
+  }
 }
 
-void battery2Callback(const std_msgs::Float32& msg) {
-  batt_voltage_2_new = msg.data;
+//ADAPTED CREATE_ENTITIES MORE COPY PASTING FROM POWER BOARD
+bool create_entities() {
+  allocator = rcl_get_default_allocator();
+
+  // COPIED PATTERN FROM POWER BOARD
+  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  RCCHECK(rclc_node_init_default(&node, "display_node", "", &support));
+
+  // DISPLAY DEPTH PUBLISHER
+  RCCHECK(rclc_publisher_init_default(
+    &sensors_depth_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64), "/sensors/depth/z"));
+
+  // COPIED PATTERN FROM POWER BOARD
+  const unsigned int timer_timeout = 1000;
+  RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(timer_timeout), timer_callback));
+
+  // COPIED EXECUTOR PATTERN FROM POWER BOARD
+  executor = rclc_executor_get_zero_initialized_executor();
+  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_add_timer(&executor, &timer));
+
+  return true;
 }
 
-void publish_depth() {
-  depth_msg.data = sensor.depth();
-  DEPTH.publish(&depth_msg);
+// COPIED DESTROY_ENTITIES FROM POWER BOARD
+void destroy_entities() {
+  rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
+  (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+
+  rcl_publisher_fini(&sensors_depth_publisher, &node);
+  rcl_timer_fini(&timer);
+  rclc_executor_fini(&executor);
+  rcl_node_fini(&node);
+  rclc_support_fini(&support);
 }
 
-void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
-  uint16_t custom_colors[] = { ILI9341_RED, ILI9341_GREEN };
-
-  int temp_tether_status = tether_status;
-  float battery_difference = batt2_V - batt1_V;
-  bool temp_battery_status = (battery_difference > -0.05 && battery_difference < 0.05) && (batt1_V >= 12.8 && batt2_V >= 12.8);
-
-  if (temp_tether_status != tether_old) {
-    uint16_t tether_color = custom_colors[temp_tether_status];
-
-    tft.fillRoundRect(0, 200, 78, 35, 6, tether_color);
+// SIMPLIFIED DISPLAY FUNCTIONS
+void updateDisplay() {
+  // Simple display update to show depth and connection status
+  static unsigned long lastDisplayUpdate = 0;
+  if (millis() - lastDisplayUpdate > 500) { // Update every 500ms
+    lastDisplayUpdate = millis();
+    
+    // Clear area and show depth
+    tft.fillRect(50, 50, 200, 60, ILI9341_BLACK);
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(2);
-    tft.setCursor(33, 210);
-    tft.print("T");
+    tft.setCursor(50, 50);
+    tft.print("Depth: ");
+    tft.print(sensor.depth());
+    tft.print(" m");
     
-    tether_old = temp_tether_status;
-  }
-
-  if (temp_battery_status != dual_batt_old) {
-    uint16_t dual_batt_color = custom_colors[temp_battery_status];
-
-    tft.fillRoundRect(80, 200, 78, 35, 6, dual_batt_color);
-    tft.setTextColor(WHITE);
-    tft.setTextSize(2);
-    tft.setCursor(108, 210);
-    tft.print("DB");
-    
-    dual_batt_old = temp_battery_status;
-  }
-}
-
-float movingAverage1(float newValue) {
-  static float sum = 0;
-  sum -= voltage_buffer1[voltage_buffer_index1];
-  voltage_buffer1[voltage_buffer_index1] = newValue;
-  sum += newValue;
-  voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
-  return sum / MOVING_AVERAGE_SAMPLES;
-}
-
-float movingAverage2(float newValue) {
-  static float sum = 0;
-  sum -= voltage_buffer2[voltage_buffer_index2];
-  voltage_buffer2[voltage_buffer_index2] = newValue;
-  sum += newValue;
-  voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
-  return sum / MOVING_AVERAGE_SAMPLES;
-}
-
-void batt1(float V1) {
-  V1 = round(V1 * 10.0) / 10.0;
-  V1 = movingAverage1(V1);
-  V1 = round(V1 * 10.0) / 10.0;
-
-  //voltages_new[0] = V1;
-  //if (voltages_old[0] != voltages_new[0]) {
-    //voltages_old[0] = voltages_new[0];
-    // Update display regardless of previous value after page change
-    if (voltages_old[0] != V1) {
-      voltages_old[0] = V1;
-
-    uint16_t color;
-    if (V1 <= 14.8) {
-      color = RED;
-    } else if (V1 <= 15.8) {
-      color = YELLOW;
-    } else {
-      color = GREEN;
-    }
-
-    buttons[0].color = color;
-    tft.fillRoundRect(buttons[0].x, buttons[0].y, 
-      buttons[0].width, buttons[0].height, 8, color);
-
-    char buffer[6];
-    dtostrf(V1, 4, 1, buffer);
-    String voltageText = String(buffer) + "V";
-
-    tft.setTextColor(BLACK);
-    tft.setTextSize(3);
-
-    int16_t x, y;
-    uint16_t w, h;
-    tft.getTextBounds(voltageText, 0, 0, &x, &y, &w, &h);
-    tft.setCursor(buttons[0].x + (buttons[0].width - w)/2, 
-                 buttons[0].y + (buttons[0].height - h)/2);
-    tft.print(voltageText);
-  }
-}
-
-void batt2(float V2) {
-  V2 = round(V2 * 10.0) / 10.0;
-  V2 = movingAverage2(V2);
-  V2 = round(V2 * 10.0) / 10.0;
-
-  voltages_new[1] = V2;
-  if (voltages_old[1] != voltages_new[1]) {
-    voltages_old[1] = voltages_new[1];
-
-    uint16_t color;
-    if (V2 <= 14.8) {
-      color = RED;
-    } else if (V2 <= 15.8) {
-      color = YELLOW;
-    } else {
-      color = GREEN;
-    }
-
-    buttons[1].color = color;
-    tft.fillRoundRect(buttons[1].x, buttons[1].y, 
-      buttons[1].width, buttons[1].height, 8, color);
-
-    char buffer[6];
-    dtostrf(V2, 4, 1, buffer);
-    String voltageText = String(buffer) + "V";
-
-    tft.setTextColor(BLACK);
-    tft.setTextSize(3);
-
-    int16_t x, y;
-    uint16_t w, h;
-    tft.getTextBounds(voltageText, 0, 0, &x, &y, &w, &h);
-    tft.setCursor(buttons[1].x + (buttons[1].width - w)/2, 
-                 buttons[1].y + (buttons[1].height - h)/2);
-    tft.print(voltageText);
-  }
-}
-
-void thrusterStatus(int Sthrusters[]) {
-  for (int i = 0; i < 8; i++) {
-    if (microseconds[i] == 1500) {
-      Sthrusters[i] = 0;
-    } else {
-      Sthrusters[i] = 1;
+    // Show connection status
+    tft.setCursor(50, 80);
+    tft.print("ROS2: ");
+    switch(state) {
+      case WAITING_AGENT: tft.print("Waiting"); break;
+      case AGENT_AVAILABLE: tft.print("Available"); break;
+      case AGENT_CONNECTED: tft.print("Connected"); break;
+      case AGENT_DISCONNECTED: tft.print("Disconnected"); break;
     }
   }
-
-}
-
-// == Status Update Functions === //
-
-void updateStatusDisplay(String newStatus) {
-  if (newStatus != status_old) {
-    tft.fillRoundRect(0, 164, 320, 30, 8, MAIN_RECT_COLOR);
-
-    tft.setTextColor(BLACK);
-    tft.setTextSize(2);
-
-    int16_t x, y;
-    uint16_t w, h;
-    tft.getTextBounds(newStatus, 0,0, &x, &y, &w, &h);
-    tft.setCursor((320-w)/2, 164 + (30 - h) / 2);
-    tft.print(newStatus);
-
-    status_old = newStatus;
-  }
-}
-
-// ===== Thruster/Devices Functions =====
-void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
-  if (isInDryTestMode) {
-    return;
-  }
-  memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
-  thrusterStatus(Sthrusters);
-}
-
-void devicesIMUMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[0] = msg.data;
-}
-
-void devicesDVLMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[1] = msg.data;
-}
-
-void devicesPSMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[2] = msg.data;
-}
-
-void devicesHYDMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[3] = msg.data;
-}
-
-void devicesACTMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[4] = msg.data;
-}
-
-void devicesFCMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[5] = msg.data;
-}
-
-void devicesDCMessageCallback(const std_msgs::Int32& msg) {
-  devices_new[6] = msg.data;
-}
-
-void statusMessageCallback(const std_msgs::String& msg) {
-  status_new = msg.data;
-  updateStatusDisplay(status_new);
-
-}
-
-
-
-// ===== ROS Subscribers =====
-ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT1("/power/batteries/voltage/1", &battery1Callback);
-ros::Subscriber<std_msgs::Float32> BATT2("/power/batteries/voltage/2", &battery2Callback);
-ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
-ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEHYD("/sensors/hydrophones/status", &devicesHYDMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesACTMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
-ros::Subscriber<std_msgs::String> STATUS_SUB("/mission_display", &statusMessageCallback);
-
-void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
-  if (isInDryTestMode) return;
-
-  int temp_thrusters[] = { T1, T2, T3, T4, T5, T6, T7, T8 };
-  uint16_t thruster_colors[] = {WHITE, CYAN};
-
-  for (int i = 0; i < 8; i++) {
-    uint16_t color = thruster_colors[temp_thrusters[i]];
-    if (temp_thrusters[i] != thrusters_old[i]) {
-      buttons_thrusters[i].color = color;
-    }
-  }
-
-  for (const Button &btn : buttons_thrusters) {
-    tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    tft.setTextColor(ILI9341_BLACK);
-    tft.setCursor(btn.x + 5, btn.y + 10);
-    tft.setTextSize(2);
-    tft.print(btn.label);
-  }
-
-  for (int i = 0; i < 8; i++) {
-    thrusters_old[i] = temp_thrusters[i];
-  }
-}
-
-
-void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
-  int temp_devices[] = {IMU, DVL, PS, HYD, ACT, FC, DC};
-  uint16_t device_colors[] = {RED, GREEN};
-  int device_x[] = {0, 276, 46, 92, 138, 184, 230};
-  int device_y = 110;
-  int device_width = 44;
-  int device_height = 48;
-
-  for (int i = 0; i < 7; i++) {
-    if (temp_devices[i] != devices_old[i]) {
-      uint16_t color = device_colors[temp_devices[i]];
-      tft.fillRoundRect(device_x[i], device_y, device_width, device_height, 8, color);
-
-      //tft.setCursor(device_x[i] + 12, device_y + 15);
-      tft.setTextColor(WHITE);
-      tft.setTextSize(2);
-      switch (i) {
-        case 0: {
-          tft.setCursor(device_x[i] + 4, device_y + 15);
-          tft.print("IMU");
-          break;
-        }
-        case 1: {
-          tft.setCursor(device_x[i] + 6, device_y + 15);
-          tft.print("DVL");
-          break;
-        }
-        case 2: {
-          tft.setCursor(device_x[i] + 17, device_y + 15);
-          tft.print("P");
-          break;
-        }
-        case 3: {
-          tft.setCursor(device_x[i] + 17, device_y + 15);
-          tft.print("H");
-          break;
-        }
-        case 4: {
-          tft.setCursor(device_x[i] + 17, device_y + 15);
-          tft.print("A");
-          break;
-        }
-        case 5: {
-          tft.setCursor(device_x[i] + 12, device_y + 15);
-          tft.print("FC");
-          break;
-        }
-        case 6: {
-          tft.setCursor(device_x[i] + 12, device_y + 15);
-          tft.print("DC");
-          break;
-        }
-      }
-      devices_old[i] = temp_devices[i];
-    }
-  }
-}
-
-// ===== Dry Test Functions =====
-void initializeThrusterMessages() {
-  for (int i = 0; i < 8; i++) {
-    cmd_msg.microseconds[i] = 1500;
-    reset_cmd.microseconds[i] = 1500;
-  }
-}
-
-void optimized_dry_test(int t) {
-  for (int i = 0; i < 8; i++) {
-    if (i == t) {
-      cmd_msg.microseconds[i] = THRUSTER_SPEED;
-    } else {
-      cmd_msg.microseconds[i] = 1500;
-    }
-  }
-
-  if (nh.connected()) {
-    pub.publish(&cmd_msg);
-    delay(1000);
-    pub.publish(&reset_cmd);
-  } 
-}
-
-void updateThrusters_page2() {
-  uint16_t thruster_colors[] = {DARK_GRAY, CYAN};
-
-  for (int i = 0; i < 8; i++) {
-    int row = i / 4;
-    int col = i % 4;
-    int x = 43 + col * 60;
-    int y = 65 + row * 60;
-    uint16_t color = thruster_colors[thruster_states[i]];
-
-    tft.fillRoundRect(x + 2, y + 2, 46, 46, 10, color);
-
-    tft.setCursor(x + 15, y + 12);
-    tft.setTextColor(DARK_GRAY);
-    tft.setTextSize(2);
-    tft.print(i + 1);
-  }
-}
-
-void initDryTestPage() {
-  tft.setRotation(1);
-  tft.fillScreen(BACKGROUND_COLOR);
-  
-  for (int i = 0; i < 8; i++) {
-    int row = i / 4;
-    int col = i % 4;
-    int x = 43 + col * 60;
-    int y = 65 + row * 60;
-    tft.drawRoundRect(x, y, 50, 50, 10, LIGHT_GRAY);
-  }
-
-  tft.setCursor(WIDTH / 2 - 110, HEIGHT / 3 - 30);
-  tft.setTextColor(LIGHT_GRAY);
-  tft.setTextSize(1);
-  tft.println("-------------Dry Test Mode-------------");
-
-  int backButtonX = 8;
-  int backButtonY = 10;
-  int backButtonWidth = 60;
-  int backButtonHeight = 30;
-  tft.fillRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, LIGHT_GRAY);
-  tft.drawRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, WHITE);
-  tft.setCursor(backButtonX + 10, backButtonY + 8);
-  tft.setTextColor(DARK_GRAY);
-  tft.setTextSize(2);
-  tft.print("BACK");
-}
-
-// ===== Display Functions =====
-void initMainPage() {
-
-  tft.setRotation(1);
-  tft.fillScreen(BACKGROUND_COLOR);
-  
-  for (const Button &btn : buttons) {
-
-    tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    if (btn.label == "Touch 2nd row for surprise") {
-      tft.setTextColor(BLACK);
-    } else {
-      tft.setTextColor(WHITE);
-    }
-    int16_t x, y;
-    uint16_t w, h;
-    tft.getTextBounds(btn.label, 0, 0, &x, &y, &w, &h);
-
-    if (btn.label != "0.0V") {
-      tft.setTextSize(2);
-      if (btn.label == "IMU") {
-        tft.setCursor(btn.x + (btn.width - w) / 2 - 9, btn.y + (btn.height - h) / 2 - 5);
-      } else {
-        tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
-      }
-      tft.print(btn.label);
-    }
-  }
-
-  //add this line right after the loop to show the surprise 
-  updateStatusDisplay(status_new);
-
-  // Force battery display refresh after page change
-  voltages_old[0] = -1;  // Force batt1 to update
-  voltages_old[1] = -1;  // Force batt2 to update
-  batt1(batt_voltage_1_new);
-  batt2(batt_voltage_2_new);
 }
 
 void handleTouch() {
   if (ts.touched()) {
-    if (!wasTouched) {
-      wasTouched = true;
-      TS_Point p = ts.getPoint();
-      p.x = map(p.x, 300, 4000, 320, 0);
-      p.y = map(p.y, 200, 4000, 240, 0);
-      int16_t x = p.x;  
-      int16_t y = p.y;
-
-      if (!isInDryTestMode) {
-        // Main screen button press detection
-        if (x >= 0 && x <= 78 && y >= 200 && y <= 235) { // Tether button
-          tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-        }
-        else if (x >= 80 && x <= 158 && y >= 200 && y <= 235) { // Dual Battery button
-          tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-        }
-        else if (x >= 0 && x <= 300 && y >= 60 && y <= 110) { // Dry Test button
-          isInDryTestMode = true;
-          initDryTestPage();
-        }
-      } else {
-        // Dry Test Mode button presses
-        if (x >= 8 && x <= 68 && y >= 10 && y <= 40) { // BACK button
-          isInDryTestMode = false;
-          initMainPage();
-          batt_voltage_1_new = 0.0;
-          batt_voltage_2_new = 0.0;
-          batt1(batt_voltage_1_new);
-          batt2(batt_voltage_2_new);
-          tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-        } else {
-          // Check thruster button presses
-          for (int i = 0; i < 8; i++) {
-            int row = i / 4;
-            int col = i % 4;
-            int x_start = 43 + col * 60;
-            int y_start = 65 + row * 60;
-
-            if (x >= x_start && x <= x_start + 50 && y >= y_start && y <= y_start + 50) {
-              thruster_states[i] = !thruster_states[i];
-              updateThrusters_page2();
-              optimized_dry_test(i);
-              thruster_states[i] = 0;
-              updateThrusters_page2();
-              break;
-            }
-          }
-        }
-      }
-    }
-  } else {
-    wasTouched = false;
+    TS_Point p = ts.getPoint();
+    tft.fillCircle(p.x, p.y, 5, ILI9341_RED);
+    delay(100);
+    tft.fillCircle(p.x, p.y, 5, ILI9341_BLACK);
   }
+}
+
+void initDisplay() {
+  tft.begin();
+  ts.begin();
+  tft.setRotation(1);
+  tft.fillScreen(ILI9341_BLACK);
+
+  tft.setTextColor(ILI9341_WHITE);
+  tft.setTextSize(2);
+  tft.setCursor(80, 10);
+  tft.print("Depth Sensor ROS2");
+  
+  Serial.println("Display initialized");
 }
 
 void display_setup() {
-  // Initialize I2C communication with sensor
-  Wire.begin();
-  sensor.init();
-  delay(1000);
+  // Initializing serial for debugging
+  Serial.begin(115200);
+  delay(2000);
+  Serial.println("Depth Sensor ROS2 Starting");
 
+  // Initializing display
+  initDisplay();
+
+  // my existing depth sensor init
+  Wire.begin();
+  if (!sensor.init()) {
+    Serial.println("Depth sensor init failed");
+    return;
+  }
+  delay(1000);
   sensor.setModel(MS5837::MS5837_30BA);
   sensor.setFluidDensity(997);
-
-  tft.begin();
-  ts.begin();
-  ts.setRotation(1);
+  Serial.println("Depth sensor initialized");
   
-  nh.initNode();
-  nh.subscribe(BATT1);
-  nh.subscribe(BATT2);
-  nh.subscribe(sub_tether);
-  nh.subscribe(sub);
-  nh.subscribe(DEVICEIMU);
-  nh.subscribe(DEVICEDVL);
-  nh.subscribe(DEVICEPS);
-  nh.subscribe(DEVICEHYD);
-  nh.subscribe(DEVICEACT);
-  nh.subscribe(DEVICEFC);
-  nh.subscribe(DEVICEDC);
-  nh.subscribe(STATUS_SUB);
-
-  nh.advertise(DEPTH);
-  nh.advertise(pub);
-  initializeThrusterMessages();
-
-  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
-    voltage_buffer1[i] = 0;
-    voltage_buffer2[i] = 0;
-  }
-
-  initMainPage();
+  // COPIED MICRO-ROS INIT FROM POWER BOARD
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
+  
+  set_microros_transports();
+  delay(2000);
+  
+  // Initializing  message
+  sensors_depth_msg.data = 0.0;
+  
+  // COPIED INITIAL STATE FROM POWER BOARD
+  state = WAITING_AGENT;
+  // ADDING SOME PRINT STATEMENTS FOR DEBUGGING
+  Serial.println("Setup complete - waiting for ROS2 agent");
 }
 
 void display_loop() {
-  static unsigned long lastRosUpdate = 0;
+  handleTouch();           
+  updateDisplay();       
 
-  if (millis() - lastRosUpdate > 100) {
-    if (!isInDryTestMode) {
-      nh.spinOnce();
-    }
-    lastRosUpdate = millis();
+  // COPIED THE CASE BLACK STATE MACHINE FROM POWER BOARD
+  switch (state) {
+    case WAITING_AGENT:
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      break;
+    case AGENT_AVAILABLE:
+      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (state == WAITING_AGENT) {
+        destroy_entities();
+      };
+      break;
+    case AGENT_CONNECTED:
+      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      if (state == AGENT_CONNECTED) {
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+      }
+      break;
+    case AGENT_DISCONNECTED:
+      destroy_entities();
+      state = WAITING_AGENT;
+      break;
+    default:
+      break;
   }
 
-  handleTouch();
-  
-  // Read sensor data and publish depth
-  sensor.read();
-  publish_depth();
-
-  // Update display with new data
-  batt1(batt_voltage_1_new);
-  batt2(batt_voltage_2_new);
-  tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-  device(devices_new[0], devices_new[1], devices_new[2], devices_new[3], 
-         devices_new[4], devices_new[5], devices_new[6]);
-  thrusters(Sthrusters[0], Sthrusters[1], Sthrusters[2], Sthrusters[3], 
-           Sthrusters[4], Sthrusters[5], Sthrusters[6], Sthrusters[7]);
+  // COPIED LED INDICATOR FROM POWER BOARD
+  if (state == AGENT_CONNECTED) {
+    digitalWrite(LED_PIN, 1);
+  } else {
+    digitalWrite(LED_PIN, 0);
+  }
 
   delay(10);
 }

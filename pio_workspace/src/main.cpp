@@ -4,6 +4,8 @@
 #include "actuator_main.h"
 #elif DISPLAY_H
 #include "display_main.h"
+#elif DISPLAY_ROS1_H
+#include "display_ros1_main.h"
 #elif POWER_H
 #include "power_main.h"
 #elif POWER_ROS1_H
