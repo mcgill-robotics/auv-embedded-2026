@@ -16,10 +16,14 @@
 #include <std_msgs/msg/int16_multi_array.h>
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/float32_multi_array.h>
+#include <std_msgs/msg/string.h>   // state topic
 
 #define LED_PIN 13
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
+
+// Safer propulsion command timeout (ms) – tune >= your nominal command period
+#define PROPULSION_TIMEOUT_MS 2000
 
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
@@ -41,6 +45,10 @@ std_msgs__msg__Float32 power_board_temperature_msg;
 rcl_publisher_t power_teensy_temperature_publisher;
 std_msgs__msg__Float32 power_teensy_temperature_msg;
 
+// state echo publisher
+rcl_publisher_t power_state_publisher;
+std_msgs__msg__String power_state_msg;
+
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -54,7 +62,7 @@ rcl_timer_t timer;
   static volatile int64_t init = -1; \
   if (init == -1) { init = uxr_millis();} \
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
-} while (0)\
+} while (0)
 
 void error_loop() {
   int error = 0;
@@ -73,11 +81,50 @@ enum states {
   AGENT_DISCONNECTED
 } state;
 
+// Watchdog book-keeping
+uint32_t last_propulsion_cmd_ms = 0;
+bool propulsion_in_failsafe = false;
+
+// helper to publish current state as string
+void publish_state()
+{
+  const char * text = "UNKNOWN";
+  switch (state) {
+    case WAITING_AGENT:      text = "WAITING_AGENT";      break;
+    case AGENT_AVAILABLE:    text = "AGENT_AVAILABLE";    break;
+    case AGENT_CONNECTED:    text = "AGENT_CONNECTED";    break;
+    case AGENT_DISCONNECTED: text = "AGENT_DISCONNECTED"; break;
+    default:                 text = "UNKNOWN";            break;
+  }
+
+  static const size_t BUF_CAP = 32;
+  static bool initialized = false;
+  if (!initialized) {
+    power_state_msg.data.data = (char*) malloc(BUF_CAP);
+    power_state_msg.data.capacity = BUF_CAP;
+    power_state_msg.data.size = 0;
+    initialized = true;
+  }
+
+  size_t len = strnlen(text, BUF_CAP - 1);
+  memcpy(power_state_msg.data.data, text, len);
+  power_state_msg.data.data[len] = '\0';
+  power_state_msg.data.size = len;
+
+  RCSOFTCHECK(rcl_publish(&power_state_publisher, &power_state_msg, NULL));
+}
+
 void propulsion_microseconds_callback(const void * msgin) {
-  const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
+  const std_msgs__msg__Int16MultiArray * msg =
+      (const std_msgs__msg__Int16MultiArray *)msgin;
+
   for (int i = 0; i < 8; i++) {
     microseconds[i] = msg->data.data[i];
   }
+
+  // New command: refresh watchdog and exit failsafe
+  last_propulsion_cmd_ms = millis();
+  propulsion_in_failsafe = false;
 }
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -102,8 +149,8 @@ bool create_entities() {
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
       "/propulsion/microseconds"));
-  
-  /// create publisher
+
+  // publishers
   RCCHECK(rclc_publisher_init_default(
       &power_batteries_voltage_publisher,
       &node,
@@ -128,7 +175,14 @@ bool create_entities() {
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
       "/power/teensy/temperature"));
 
-  // create timer,
+  // state publisher
+  RCCHECK(rclc_publisher_init_default(
+      &power_state_publisher,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String),
+      "/power/state"));
+
+  // timer
   const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
       &timer,
@@ -136,17 +190,23 @@ bool create_entities() {
       RCL_MS_TO_NS(timer_timeout),
       timer_callback));
 
-  // create executor
+  // executor
   executor = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator)); // number arbitrarily set, idk what is the correct on yet, trial and error later on
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber, &propulsion_microseconds_msg, &propulsion_microseconds_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber,
+                                         &propulsion_microseconds_msg,
+                                         &propulsion_microseconds_callback,
+                                         ON_NEW_DATA));
 
-  // ADDED: Reset microseconds array to 1500 when ROS entities are created/reconnected
-  // This ensures thrusters are in neutral position even if old commands arrive from ROS node
+  // Reset microseconds array to 1500 when ROS entities are created/reconnected
   for (int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
   }
+
+  // reset watchdog
+  last_propulsion_cmd_ms = millis();
+  propulsion_in_failsafe = false;
 
   return true;
 }
@@ -162,12 +222,12 @@ void connectUSB() {
 void destroy_entities() {
   disconnectUSB();
   delay(25);
-  
-  // ADDED: Reset microseconds array to 1500 before destroying entities for safety
+
+  // Reset microseconds array to 1500 before destroying entities for safety
   for (int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
   }
-  
+
   updateThrusters(offCommand);
 
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
@@ -177,6 +237,7 @@ void destroy_entities() {
   rcl_publisher_fini(&power_thrusters_current_publisher, &node);
   rcl_publisher_fini(&power_board_temperature_publisher, &node);
   rcl_publisher_fini(&power_teensy_temperature_publisher, &node);
+  rcl_publisher_fini(&power_state_publisher, &node);
   rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
@@ -216,7 +277,7 @@ void power_setup() {
 
   delay(2000);
 
-  // allocates correct message sizes and initialzies to 0, required or crashes
+  // allocates correct message sizes and initializes to 0, required or crashes
   propulsion_microseconds_msg.data.size = 8;
   propulsion_microseconds_msg.data.capacity = 8;
   propulsion_microseconds_msg.data.data = (int16_t*)malloc(propulsion_microseconds_msg.data.capacity * sizeof(int16_t));
@@ -241,13 +302,12 @@ void power_setup() {
   power_board_temperature_msg.data = 0.0;
   power_teensy_temperature_msg.data = 0.0;
 
-  //allocates thrusters to 1500 in case of reset and allocates -2.0 to sensing to go under the -1.0 of unintiailized from drivers
+  // allocates thrusters to 1500 in case of reset
   for (int i = 0; i < 8; i++) {
     propulsion_microseconds_msg.data.data[i] = 1500;
   }
 
-  // ADDED: Initialize the actual microseconds array (used by updateThrusters) to 1500 on reset
-  // This is critical because when Teensy resets but ROS node doesn't, old commands will arrive immediately
+  // Initialize the actual microseconds array (used by updateThrusters) to 1500 on reset
   for (int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
   }
@@ -265,26 +325,62 @@ void power_setup() {
 
   // first state
   state = WAITING_AGENT;
+  publish_state();
+
+  // watchdog initial values
+  last_propulsion_cmd_ms = millis();
+  propulsion_in_failsafe = false;
 }
 
 void power_loop() {
   senseData();
+
+  // Non-blocking propulsion command timeout / kill
+  if (state == AGENT_CONNECTED) {
+    uint32_t now = millis();
+    uint32_t dt  = now - last_propulsion_cmd_ms;
+
+    if (dt > PROPULSION_TIMEOUT_MS && !propulsion_in_failsafe) {
+      // Enter failsafe once: set all channels to 1500 us
+      for (int i = 0; i < 8; i++) {
+        microseconds[i] = 1500;
+      }
+      propulsion_in_failsafe = true;
+    }
+    // If dt <= timeout, or already in failsafe, leave microseconds[] to callback logic
+  } else {
+    // Not connected to agent: force safe and mark as failsafe
+    for (int i = 0; i < 8; i++) {
+      microseconds[i] = 1500;
+    }
+    propulsion_in_failsafe = true;
+  }
+
   updateThrusters(microseconds);
 
   switch (state) {
     case WAITING_AGENT:
-      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      EXECUTE_EVERY_N_MS(500,
+        state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ?
+                  AGENT_AVAILABLE : WAITING_AGENT;
+        publish_state();
+      );
       break;
 
     case AGENT_AVAILABLE:
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      publish_state();
       if (state == WAITING_AGENT) {
         destroy_entities();
       };
       break;
 
     case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      EXECUTE_EVERY_N_MS(200,
+        state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ?
+                  AGENT_CONNECTED : AGENT_DISCONNECTED;
+        publish_state();
+      );
       if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
       }
@@ -293,6 +389,7 @@ void power_loop() {
     case AGENT_DISCONNECTED:
       destroy_entities();
       state = WAITING_AGENT;
+      publish_state();
       break;
 
     default:

@@ -30,24 +30,16 @@ ros::Subscriber<std_msgs::Bool> grabberSweepSub("servo/sweep", &servoSweep_CB);
 // setup function
 void actuator_setup() {
     // pwm teensy pin connected to grabber
-  pinMode(SERVO_PIN, OUTPUT);
-    // attach servo object to teensy pin and check for success
-  if (grabberServo.attach(SERVO_PIN)) {
-    // servo attached successfully
-  } else {
-    // servo attachment failed - could add LED blink or error handling here
-  }
-    // initialize ros node
-  nh.initNode();
-    // subscribe to ros topics
-  nh.subscribe(grabberPositionSub);
-  nh.subscribe(grabberSweepSub);
+  pinMode(13, OUTPUT);
+ 
 }
 
 // check for new messages with 1ms delay
 void actuator_loop() {
-  nh.spinOnce();
-  delay(1);
+  digitalWrite(13, HIGH);
+  delay(500);
+  digitalWrite(13, LOW);
+  delay(500);
 }
 
 // move grabber servo to position specified by ros message
