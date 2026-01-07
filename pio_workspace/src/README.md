@@ -1,24 +1,18 @@
-# McGill Robotics AUV Embedded 2026
+# Source Code Overview
 
-Welcome to the AUV Embedded 2026 repository. This repository is created and maintained by the 2026 McGill Robotics AUV Electrical team. It serves as a platform for sharing, calibrating, and version controlling the embedded software developed for our Autonomous Underwater Vehicle (AUV).
+This directory contains the embedded source code for the McGill Robotics AUV systems. The code here is responsible for interfacing with onboard hardware, running micro ROS nodes, and publishing sensor data to the ROS 2 network.
 
-## About Us
+---
 
-We are a dedicated team of students from McGill Robotics, focused on designing and implementing the PCBs and embedded systems that power our underwater robot. Our mission is to enable autonomous navigation and task performance through robust electrical engineering and embedded software development.
+## Display Board
 
-## What You Will Find Here
-
-- **Embedded Software**: Source code and libraries for the AUV embedded subsystems
-- **Team Structure**: Information about team members and roles
-- **Tutorials**: Guides on using ROS 2, micro ROS, and Arduino within the AUV stack
-
-For more detail, please visit our [Wiki](https://github.com/mcgill-robotics/auv-embedded-2025/wiki).
+The Display Board firmware is implemented in `display_main.cpp`. In addition to handling the TFT display and touchscreen, this board interfaces with a pressure sensor and publishes depth data over micro ROS.
 
 ---
 
 ## ROS 2 Topics
 
-The following ROS 2 topics are **published by the Display Board**, implemented in `display_main.cpp`.
+The following ROS 2 topics are published by the Display Board (`display_main.cpp`).
 
 ### Depth Sensor Publisher
 - **Node:** `display_node`
