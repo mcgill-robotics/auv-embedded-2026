@@ -30,7 +30,6 @@ XPT2046_Touchscreen ts(TOUCH_CS);
 MS5837 sensor;
 
 // Power board led pin (not sure if needed)
-#define LED_PIN 13
 
 // Depth publishers (instead of power publishers)
 rcl_publisher_t sensors_depth_publisher;
@@ -63,11 +62,9 @@ enum states {
 void error_loop() {
     int error = 0;
     while (error < 10) {
-        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
         delay(100);
         error++;
     }
-    digitalWrite(LED_PIN, HIGH);
 }
 
 // COPIED FROM POWER BOARD STOP 
@@ -82,8 +79,8 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
     
     // Debug print in case you need it if it bugs or smt
-    Serial.print("Published depth: ");
-    Serial.println(sensors_depth_msg.data);
+    //serial.print("Published depth: ");
+    //serial.println(sensors_depth_msg.data);
   }
 }
 
@@ -102,7 +99,7 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64), "/sensors/depth/z"));
 
   // COPIED PATTERN FROM POWER BOARD
-  const unsigned int timer_timeout = 1000;
+  const unsigned int timer_timeout = 1000; // this is where you can change the Hz (1000 = 1Hz)
   RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(timer_timeout), timer_callback));
 
   // COPIED EXECUTOR PATTERN FROM POWER BOARD
@@ -173,14 +170,14 @@ void initDisplay() {
   tft.setCursor(80, 10);
   tft.print("Depth Sensor ROS2");
   
-  Serial.println("Display initialized");
+  //serial.println("Display initialized");
 }
 
 void display_setup() {
   // Initializing serial for debugging
   Serial.begin(115200);
   delay(2000);
-  Serial.println("Depth Sensor ROS2 Starting");
+  //serial.println("Depth Sensor ROS2 Starting");
 
   // Initializing display
   initDisplay();
@@ -188,17 +185,15 @@ void display_setup() {
   // my existing depth sensor init
   Wire.begin();
   if (!sensor.init()) {
-    Serial.println("Depth sensor init failed");
+    //serial.println("Depth sensor init failed");
     return;
   }
   delay(1000);
   sensor.setModel(MS5837::MS5837_30BA);
   sensor.setFluidDensity(997);
-  Serial.println("Depth sensor initialized");
+  //serial.println("Depth sensor initialized");
   
   // COPIED MICRO-ROS INIT FROM POWER BOARD
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
   
   set_microros_transports();
   delay(2000);
@@ -209,7 +204,7 @@ void display_setup() {
   // COPIED INITIAL STATE FROM POWER BOARD
   state = WAITING_AGENT;
   // ADDING SOME PRINT STATEMENTS FOR DEBUGGING
-  Serial.println("Setup complete - waiting for ROS2 agent");
+  //serial.println("Setup complete - waiting for ROS2 agent");
 }
 
 void display_loop() {
@@ -239,13 +234,6 @@ void display_loop() {
       break;
     default:
       break;
-  }
-
-  // COPIED LED INDICATOR FROM POWER BOARD
-  if (state == AGENT_CONNECTED) {
-    digitalWrite(LED_PIN, 1);
-  } else {
-    digitalWrite(LED_PIN, 0);
   }
 
   delay(10);
