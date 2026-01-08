@@ -68,7 +68,7 @@ void error_loop() {
 }
 
 // COPIED FROM POWER BOARD STOP 
-
+float count = 0;
 
 //DEPTH TIMER CALLBACK
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -76,6 +76,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   if (timer != NULL) {
     sensor.read();
     sensors_depth_msg.data = sensor.depth();
+    sensors_depth_msg.data = count++;
     RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
     
     // Debug print in case you need it if it bugs or smt
@@ -99,7 +100,8 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64), "/sensors/depth/z"));
 
   // COPIED PATTERN FROM POWER BOARD
-  const unsigned int timer_timeout = 1000; // this is where you can change the Hz (1000 = 1Hz)
+  const unsigned int timer_timeout = 1000; // this is where you can change the Hz (1000 = 1Hz) 
+  //timer_timeout_ms = 1000 / Hz
   RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(timer_timeout), timer_callback));
 
   // COPIED EXECUTOR PATTERN FROM POWER BOARD
