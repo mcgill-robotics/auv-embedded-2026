@@ -1,6 +1,6 @@
 # Source Code Overview
 
-This directory contains the embedded source code for the McGill Robotics AUV systems. The code here is responsible for interfacing with onboard hardware, running micro ROS nodes, and publishing sensor data to the ROS 2 network.
+This directory contains the embedded source code for the McGill Robotics AUV systems. The code is responsible for interfacing with onboard hardware, running micro ROS nodes, and publishing sensor data to the ROS 2 network.
 
 ---
 
@@ -22,4 +22,46 @@ The following ROS 2 topics are published by the Display Board (`display_main.cpp
 - **Units:** meters
 - **Sensor:** MS5837 (30BA)
 
-The depth value is read from the MS5837 pressure sensor and published at 1 Hz using micro ROS.
+The depth value is read from the MS5837 pressure sensor and published periodically using a micro ROS timer.
+
+---
+
+## Publishing Rate (Hz)
+
+The publishing frequency of the depth sensor is controlled by the micro ROS timer defined in `display_main.cpp`:
+
+```cpp
+// COPIED PATTERN FROM POWER BOARD
+const unsigned int timer_timeout = 1000; // timer period in milliseconds
+```
+
+This value represents the **timer period in milliseconds**, not the frequency directly.
+
+### Frequency Formula
+
+```text
+timer_timeout_ms = 1000 / frequency_in_hz
+```
+
+### Examples
+
+```text
+1 Hz  → timer_timeout = 1000
+10 Hz → timer_timeout = 100
+15 Hz → timer_timeout = 67
+20 Hz → timer_timeout = 50
+```
+
+For example, to publish depth data at approximately **15 Hz**, use:
+
+```cpp
+const unsigned int timer_timeout = 67; // ~15 Hz
+```
+
+Because the timer period must be an integer number of milliseconds, some frequencies are approximated.
+
+---
+
+## Notes
+- The micro ROS executor must run at least as fast as the timer period to ensure callbacks are serviced on time.
+- Increasing the publish rate increases CPU load and I2C traffic; ensure the sensor and microcontroller can support the selected frequency.
