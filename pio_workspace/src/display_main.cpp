@@ -68,7 +68,7 @@ void error_loop() {
 }
 
 // COPIED FROM POWER BOARD STOP 
-float count = 0;
+//float count = 0;
 
 //DEPTH TIMER CALLBACK
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -76,7 +76,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   if (timer != NULL) {
     sensor.read();
     sensors_depth_msg.data = sensor.depth();
-    sensors_depth_msg.data = count++;
+    //sensors_depth_msg.data = count++;
     RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
     
     // Debug print in case you need it if it bugs or smt
