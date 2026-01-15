@@ -4,6 +4,8 @@
 #include "actuator_main.h"
 #elif DISPLAY_H
 #include "display_main.h"
+#elif DISPLAY_ROS1_H
+#include "display_ros1_main.h"
 #elif DVL_H
 #include "dvl_main.h"
 #elif POWER_H
@@ -19,6 +21,8 @@ void setup() {
     actuator_setup();
   #elif DISPLAY_H
     display_setup();
+  #elif DISPLAY_ROS1_H
+    display_ros1_setup();
   #elif DVL_H
     dvl_setup();
   #elif POWER_H
@@ -35,6 +39,8 @@ void loop() {
     actuator_loop();
   #elif DISPLAY_H
     display_loop();
+  #elif DISPLAY_ROS1_H
+    display_ros1_loop();
   #elif DVL_H
     dvl_loop();
   #elif POWER_H
