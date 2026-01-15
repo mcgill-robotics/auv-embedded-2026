@@ -668,15 +668,43 @@ void display_setup() {
   initMainPage();
 }
 
+//use non blocking timing to update the display
 void display_loop() {
+//adding a non-blocking delay for depth sensor reading and ros spinOnce
   static unsigned long lastRosUpdate = 0;
+  static unsigned long lastDepthUpdate = 0;
+  static unsigned long lastDisplayUpdate = 0;
+  static unsigned long lastSensorRead = 0;
 
-  if (millis() - lastRosUpdate > 100) {
+  unsigned long currentMillis = millis();
+
+
+  // ROS updates every 100ms
+  if (currentMillis - lastRosUpdate > 100) {
     if (!isInDryTestMode) {
       nh.spinOnce();
     }
     lastRosUpdate = millis();
   }
+  //depth sensor reading limit to 50ms instead of every loop
+  if (currentMillis - lastSensorRead > 50) {
+    sensor.read();
+    lastSensorRead = currentMillis;
+  }
+
+  // Depth publishing separate from reading, can be slower
+  if (currentMillis - lastDepthUpdate > 200) {
+    publish_depth();
+    lastDepthUpdate = currentMillis;
+  }
+
+  /*
+  //display updates every 150ms to reduce flickering
+  if (currentMillis - lastDisplayUpdate > 150) {
+    updateDisplay();
+    lastDisplayUpdate = currentMillis;
+  }
+  */
 
   handleTouch();
   
@@ -684,16 +712,21 @@ void display_loop() {
   sensor.read();
   publish_depth();
 
+  
+  
   // Update display with new data
   batt1(batt_voltage_1_new);
   batt2(batt_voltage_2_new);
+
   tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
+
   device(devices_new[0], devices_new[1], devices_new[2], devices_new[3], 
          devices_new[4], devices_new[5], devices_new[6]);
+
   thrusters(Sthrusters[0], Sthrusters[1], Sthrusters[2], Sthrusters[3], 
            Sthrusters[4], Sthrusters[5], Sthrusters[6], Sthrusters[7]);
-
-  delay(10);
+  
+  //delay(10);  // Small delay to avoid overwhelming the CPU
 }
 
 #endif
