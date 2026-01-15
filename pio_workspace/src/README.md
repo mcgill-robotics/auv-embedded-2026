@@ -63,5 +63,5 @@ Because the timer period must be an integer number of milliseconds, some frequen
 ---
 
 ## Notes
-- The micro ROS executor must run at least as fast as the timer period to ensure callbacks are serviced on time.
+- The microROS executor must run at least as fast as the timer period to ensure callbacks are serviced on time.
 - Increasing the publish rate increases CPU load and I2C traffic; ensure the sensor and microcontroller can support the selected frequency.
