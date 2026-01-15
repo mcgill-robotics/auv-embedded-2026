@@ -17,6 +17,8 @@ void setup() {
     actuator_setup();
   #elif DISPLAY_H
     display_setup();
+  #elif DISPLAY_ROS1_H
+    display_ros1_setup();
   #elif POWER_H
     power_setup();
   #elif POWER_ROS1_H
@@ -29,6 +31,8 @@ void loop() {
     actuator_loop();
   #elif DISPLAY_H
     display_loop();
+  #elif DISPLAY_ROS1_H
+    display_ros1_loop();
   #elif POWER_H
     power_loop();
   #elif POWER_ROS1_H
