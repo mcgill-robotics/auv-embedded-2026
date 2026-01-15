@@ -1,6 +1,6 @@
 #ifdef ACTUATOR_ROS1_H
 
-#include "actuator_main.h"
+#include "actuator_ros1_main.h"
 
 #include <Arduino.h>
 
