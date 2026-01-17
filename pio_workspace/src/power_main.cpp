@@ -22,6 +22,7 @@
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
+#define WATER_PIN 11
 
 
 #define ENABLE_VOLTAGE_SENSE true
@@ -201,9 +202,18 @@ void senseData() {
   }
 }
 
+// IRQ for when water is detected
+void water_detected(){
+  // TO BE IMPLEMENTED
+  // Intense Mode: kill thrusters, system kill, to be discussed
+  // Milder / Pool Test Mode: send message to jetson for display, kill thrusters?
+}
+
 void power_setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
+  pinMode(WATER_PIN, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
 
   initThrusters();
 
