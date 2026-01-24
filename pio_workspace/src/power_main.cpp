@@ -23,6 +23,7 @@
 
 #define LED_PIN 13
 #define WATER_PIN 11
+#define KS_PIN 10
 
 
 #define ENABLE_VOLTAGE_SENSE true
@@ -207,13 +208,27 @@ void water_detected(){
   // TO BE IMPLEMENTED
   // Intense Mode: kill thrusters, system kill, to be discussed
   // Milder / Pool Test Mode: send message to jetson for display, kill thrusters?
+  for (int i = 0; i < 10; i++){
+    digitalWrite(LED_PIN, HIGH);
+    delayMicroseconds(500000);
+    digitalWrite(LED_PIN, LOW);
+    delayMicroseconds(500000);
+  }
 }
 
 void power_setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
   pinMode(WATER_PIN, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
+  pinMode(KS_PIN, OUTPUT);
+
+  delay(5000);
+  digitalWrite(KS_PIN, HIGH);
+  while (1){
+    
+  }
+
+  // attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
 
   initThrusters();
 
