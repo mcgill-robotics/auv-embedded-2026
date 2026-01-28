@@ -3,6 +3,7 @@
 #include "power_main.h"
 
 #include <Arduino.h>
+#include <digitalWriteFast.h>
 
 #include "ThrusterControl.h"
 #include "adc_sensors.h"
@@ -220,15 +221,15 @@ void power_setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
   pinMode(WATER_PIN, INPUT_PULLDOWN);
-  pinMode(KS_PIN, OUTPUT);
+  
+  // Do all safety checks, during this time System KS is HIGH (system off)
+  //
 
-  delay(5000);
-  digitalWrite(KS_PIN, HIGH);
-  while (1){
-    
-  }
+  pinMode(KS_PIN, OUTPUT); // System KS set to LOW (system armed)
+  digitalWrite(KS_PIN, LOW);
 
-  // attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
+  // Start Setup Code Here
+  attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
 
   initThrusters();
 
