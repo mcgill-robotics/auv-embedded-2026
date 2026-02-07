@@ -2,8 +2,12 @@
 
 #ifdef ACTUATOR_H
 #include "actuator_main.h"
+#elif ACTUATOR_ROS1_H
+#include "actuator_ros1_main.h"
 #elif DISPLAY_H
 #include "display_main.h"
+#elif DISPLAY_ROS1_H
+#include "display_ros1_main.h"
 #elif DVL_H
 #include "dvl_main.h"
 #elif POWER_H
@@ -12,13 +16,18 @@
 #include "power_ros1_main.h"
 #elif THRUSTER_TESTS_H
 #include "thruster_tests_main.h"
+
 #endif
 
 void setup() {
   #ifdef ACTUATOR_H
     actuator_setup();
+  #elif ACTUATOR_ROS1_H
+    actuator_ros1_setup();
   #elif DISPLAY_H
     display_setup();
+  #elif DISPLAY_ROS1_H
+    display_ros1_setup();
   #elif DVL_H
     dvl_setup();
   #elif POWER_H
@@ -33,8 +42,12 @@ void setup() {
 void loop() {
   #ifdef ACTUATOR_H
     actuator_loop();
+  #elif ACTUATOR_ROS1_H
+    actuator_ros1_loop();
   #elif DISPLAY_H
     display_loop();
+  #elif DISPLAY_ROS1_H
+    display_ros1_loop();
   #elif DVL_H
     dvl_loop();
   #elif POWER_H
