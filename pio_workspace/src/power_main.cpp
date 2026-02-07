@@ -206,25 +206,21 @@ void senseData() {
 
 // IRQ for when water is detected
 void water_detected(){
-  // TO BE IMPLEMENTED
-  // Intense Mode: kill thrusters, system kill, to be discussed
+  // Intense Mode: kill thrusters, system kill, to be discussed << Current implementation
   // Milder / Pool Test Mode: send message to jetson for display, kill thrusters?
-  for (int i = 0; i < 10; i++){
-    digitalWrite(LED_PIN, HIGH);
-    delayMicroseconds(500000);
-    digitalWrite(LED_PIN, LOW);
-    delayMicroseconds(500000);
-  }
+  digitalWrite(KS_PIN, HIGH);
+  // digitalWrite(LED_PIN, LOW);
 }
 
 void power_setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
   pinMode(WATER_PIN, INPUT_PULLDOWN);
+  pinMode(KS_PIN, INPUT_PULLUP);
+
+  delay(5000);
   
   // Do all safety checks, during this time System KS is HIGH (system off)
-  //
-
   pinMode(KS_PIN, OUTPUT); // System KS set to LOW (system armed)
   digitalWrite(KS_PIN, LOW);
 
