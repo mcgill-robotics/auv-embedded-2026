@@ -1,6 +1,6 @@
-#ifdef DISPLAY_H
+#ifdef DISPLAY_ROS1_H
 
-#include "display_main.h"
+#include "display_ros1_main.h"
 
 #include "SPI.h"
 #include "Adafruit_GFX.h"
@@ -629,7 +629,7 @@ void handleTouch() {
   }
 }
 
-void display_setup() {
+void display_ros1_setup() {
   // Initialize I2C communication with sensor
   Wire.begin();
   sensor.init();
@@ -668,7 +668,7 @@ void display_setup() {
   initMainPage();
 }
 
-void display_loop() {
+void display_ros1_loop() {
   static unsigned long lastRosUpdate = 0;
 
   if (millis() - lastRosUpdate > 100) {
