@@ -99,9 +99,9 @@ bool create_entities() {
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64), "/sensors/depth/z"));
 
-  // COPIED PATTERN FROM POWER BOARD
-  const unsigned int timer_timeout = 1000; // this is where you can change the Hz (1000 = 1Hz) 
-  //timer_timeout_ms = 1000 / Hz
+  // CHANGE DEPTH PUBLISHING FREQUENCY
+    //to calculate new frequency = timer_timeout_ms = 1000 / Hz
+  const unsigned int timer_timeout = 67; // 67 = 15Hz, 100 = 10Hz, 1000 = 1Hz 
   RCCHECK(rclc_timer_init_default(&timer, &support, RCL_MS_TO_NS(timer_timeout), timer_callback));
 
   // COPIED EXECUTOR PATTERN FROM POWER BOARD
