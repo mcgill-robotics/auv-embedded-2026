@@ -184,11 +184,11 @@ void display_setup() {
   // Initializing display
   initDisplay();
 
-  // my existing depth sensor init
+  // Loops until depth sensor initializes (BLOCKING LOOP)
   Wire.begin();
-  if (!sensor.init()) {
+  while (!sensor.init()) {
     //serial.println("Depth sensor init failed");
-    return;
+    //return;
   }
   delay(1000);
   sensor.setModel(MS5837::MS5837_30BA);
