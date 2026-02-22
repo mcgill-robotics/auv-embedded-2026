@@ -166,6 +166,12 @@ void connectUSB() {
 void destroy_entities() {
   disconnectUSB();
   delay(25);
+  
+  // Clear out the global array so old commands aren't cached
+  for(int i = 0; i < 8; i++) {
+    microseconds[i] = 1500;
+  }
+  
   updateThrusters(offCommand);
 
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
@@ -262,7 +268,14 @@ void power_setup() {
 
 void power_loop() {
   senseData();
-  updateThrusters(microseconds);
+
+  // SAFETY FAILSAFE: Only apply ROS thruster commands if connected.
+  if (state == AGENT_CONNECTED) {
+    updateThrusters(microseconds);
+  } else {
+    // If we lose connection to Jetson/ROS, immediately stop thrusters.
+    updateThrusters(offCommand);
+  }
 
   switch (state) {
     case WAITING_AGENT:
