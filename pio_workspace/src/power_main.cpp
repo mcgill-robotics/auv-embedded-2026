@@ -167,12 +167,12 @@ void destroy_entities() {
   disconnectUSB();
   delay(25);
   
+  updateThrusters(offCommand);
+  
   // Clear out the global array so old commands aren't cached
   for(int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
-  }
-  
-  updateThrusters(offCommand);
+  }  
 
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
@@ -269,19 +269,13 @@ void power_setup() {
 void power_loop() {
   senseData();
 
-  // SAFETY FAILSAFE: Only apply ROS thruster commands if connected.
-  if (state == AGENT_CONNECTED) {
-    updateThrusters(microseconds);
-  } else {
-    // If we lose connection to Jetson/ROS, immediately stop thrusters.
-    updateThrusters(offCommand);
-  }
-
   switch (state) {
     case WAITING_AGENT:
+      updateThrusters(offCommand);
       EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
       break;
     case AGENT_AVAILABLE:
+      updateThrusters(offCommand);
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
       if (state == WAITING_AGENT) {
         destroy_entities();
@@ -291,6 +285,7 @@ void power_loop() {
       EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
       if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+        updateThrusters(microseconds);
       }
       break;
     case AGENT_DISCONNECTED:
