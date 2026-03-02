@@ -167,12 +167,10 @@ void destroy_entities() {
   disconnectUSB();
   delay(25);
   
-  updateThrusters(offCommand);
-  
   // Clear out the global array so old commands aren't cached
   for(int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
-  }  
+  }
 
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
@@ -282,10 +280,12 @@ void power_loop() {
       };
       break;
     case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
       if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
         updateThrusters(microseconds);
+      } else {
+        updateThrusters(offCommand);
       }
       break;
     case AGENT_DISCONNECTED:
