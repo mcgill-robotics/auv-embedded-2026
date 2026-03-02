@@ -7,6 +7,7 @@
 #include "ThrusterControl.h"
 #include "adc_sensors.h"
 #include "TMP36.h"
+#include "custom_cores.h"
 
 #include <micro_ros_arduino.h>
 
@@ -22,7 +23,7 @@
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
-
+#define KS_PIN 10
 
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
@@ -203,9 +204,17 @@ void senseData() {
   for (size_t i = 0; i < 2; i++) {
       power_batteries_voltage_msg.data.data[i] = voltage_data[i];
   }
+
+  if (voltage_data[0] <= 13.2 && voltage_data[1] <= 13.2) {
+    digitalWrite(KS_PIN, HIGH);
+  } else {
+    digitalWrite(KS_PIN, LOW);
+  }
 }
 
 void power_setup() {
+  pinModeOutputHigh(KS_PIN);
+  digitalWrite(KS_PIN, HIGH);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
