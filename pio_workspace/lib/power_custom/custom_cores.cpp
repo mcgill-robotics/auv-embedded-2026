@@ -17,7 +17,7 @@ void pinModeOutputHigh(uint8_t pin)
     // Page 971 (Section 12.6.1.10) of this datasheet https://www.pjrc.com/teensy/IMXRT1060RM_rev3_annotations.pdf demostrates the equivalent functionality
     *(p->reg + 0x21) = p->mask;
     
-    *(p->reg + 1) |= p->mask; // TODO: atomic
+    *(p->reg + 1) |= p->mask;
     *(p->pad) = IOMUXC_PAD_DSE(7);
 	*(p->mux) = 5 | 0x10;
 }
