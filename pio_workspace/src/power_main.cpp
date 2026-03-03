@@ -193,7 +193,6 @@ void destroy_entities() {
 float voltage[2] = {0.0, 0.0};
 
 enum power_states {
-    STARTUP,
     DUAL_BATTERY,
     SINGLE_BATTERY,
     LOW_VOLTAGE,
