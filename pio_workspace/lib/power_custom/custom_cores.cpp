@@ -14,7 +14,7 @@ void pinModeOutputHigh(uint8_t pin)
     // When inspecting the digitalWrite function in digital.c from the teensy cores, it can be seen that 0x21 corresponds to set (HIGH) and 0x22 corresponds to clear (LOW)
     // Simply loading those pins with a mask sets the pin to either HIGH or to LOW
     // The datasheet of the chip has different specific numbers due to abstraction of the pin numbers by the cores
-    // Page 971 (Section 12.6.1.10) of this datasheet https://www.pjrc.com/teensy/IMXRT1060RM_rev3_annotations.pdf deomstrates the equivalent functionality
+    // Page 971 (Section 12.6.1.10) of this datasheet https://www.pjrc.com/teensy/IMXRT1060RM_rev3_annotations.pdf demostrates the equivalent functionality
     *(p->reg + 0x21) = p->mask;
     
     *(p->reg + 1) |= p->mask; // TODO: atomic
