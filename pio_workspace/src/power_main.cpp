@@ -73,12 +73,12 @@ void error_loop() {
     digitalWrite(LED_PIN, HIGH);
 }
 
-enum states {
+enum microros_states {
   WAITING_AGENT,
   AGENT_AVAILABLE,
   AGENT_CONNECTED,
   AGENT_DISCONNECTED
-} state;
+} microros_state;
 
 void propulsion_microseconds_callback(const void * msgin)
 {  
@@ -269,28 +269,28 @@ void power_setup() {
   power_board_temperature_msg.data = -2.0;
   power_teensy_temperature_msg.data = -2.0;
 
-  // first state
-  state = WAITING_AGENT;
+  // first microros_state
+  microros_state = WAITING_AGENT;
 }
 
 void power_loop() {
   senseData();
 
-  switch (state) {
+  switch (microros_state) {
     case WAITING_AGENT:
       updateThrusters(offCommand);
-      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      EXECUTE_EVERY_N_MS(500, microros_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
       break;
     case AGENT_AVAILABLE:
       updateThrusters(offCommand);
-      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
-      if (state == WAITING_AGENT) {
+      microros_state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (microros_state == WAITING_AGENT) {
         destroy_entities();
       };
       break;
     case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-      if (state == AGENT_CONNECTED) {
+      EXECUTE_EVERY_N_MS(50, microros_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      if (microros_state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
         updateThrusters(microseconds);
       } else {
@@ -299,13 +299,13 @@ void power_loop() {
       break;
     case AGENT_DISCONNECTED:
       destroy_entities();
-      state = WAITING_AGENT;
+      microros_state = WAITING_AGENT;
       break;
     default:
       break;
   }
 
-  if (state == AGENT_CONNECTED) {
+  if (microros_state == AGENT_CONNECTED) {
     digitalWrite(LED_PIN, 1);
   } else {
     digitalWrite(LED_PIN, 0);
