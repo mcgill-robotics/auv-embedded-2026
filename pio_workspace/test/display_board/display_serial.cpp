@@ -1,14 +1,5 @@
 #ifdef DISPLAY_H
 
-// IMPORTANT 
-// ===== Serial Parser =====
-// Commands (send via Serial Monitor, end with newline):
-//   B1:15.0  -> set battery 1 voltage
-//   B2:15.0   -> set battery 2 voltage
-//   T:1 or T:0   -> tether status (1=connected, 0=disconnected)
-//   IMU:1, DVL:1, PS:1, HYD:1, ACT:1, FC:1, DC:1 -> device status (1=ok, 0=fault)
-//   THR:1500,1500,... -> 8 thruster microseconds
-//   STATUS:some message -> status bar text
 
 #include "display_main.h"
 
