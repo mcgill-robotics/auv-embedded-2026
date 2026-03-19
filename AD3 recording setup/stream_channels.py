@@ -31,7 +31,7 @@ def check_ok(ok):
         return
     err_msg = ctypes.create_string_buffer(512)
     dwf.FDwfGetLastErrorMsg(err_msg)
-    raise RuntimeError(err_msg.value.decode(errors="replace"))
+    raise RuntimeError(err_msg.value.decode(errors="replace")+"Please check the following : 1. No other instance of waveforms is open (GUI/Python script) and 2. that the oscilloscope is properly connected on the jetson")
 
 
 def open_first_device():
@@ -458,7 +458,6 @@ def main():
     streamer = TcpStreamer(
         host="0.0.0.0",
         port=9000,
-        channel=0,          # Channel 1
         sample_rate=500_000.0,
         input_range=5.0,
         chunk_hint=8192,
