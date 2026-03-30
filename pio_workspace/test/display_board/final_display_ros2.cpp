@@ -225,7 +225,10 @@ bool create_entities() {
     "/devices/status"));
 
   // Create timer (publish every 500ms = 2Hz)
-  const unsigned int timer_timeout = 500;
+  //CHANGE DEPTH PUB FREQUENCY
+  //timer_timeout_ms=1000/Hz
+  
+  const unsigned int timer_timeout = 67; //67 = 15 Hz, 100 = 10 Hz, 1000 = 1 Hz
   RCCHECK(rclc_timer_init_default(
     &timer,
     &support,
