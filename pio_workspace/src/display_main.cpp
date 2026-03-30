@@ -1,5 +1,5 @@
 #ifdef DISPLAY_H
-
+//Make sure that the topic names are good check for temp specifically! 
 
 #include "display_main.h"
 
@@ -7,18 +7,28 @@
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
 #include "XPT2046_Touchscreen.h"
-#include <SPI.h>
-#include <Adafruit_ILI9341.h>
-#include <XPT2046_Touchscreen.h>
 #include <Wire.h>
 #include "MS5837.h"
 #include <cmath>
 
+// ROS2 includes
+#include <micro_ros_arduino.h>
+#include <rcl/rcl.h>
+#include <rcl/error_handling.h>
+#include <rclc/rclc.h>
+#include <rclc/executor.h>
+#include <rmw_microros/rmw_microros.h>
+#include <std_msgs/msg/float32.h>
+#include <std_msgs/msg/float32_multi_array.h>
+#include <std_msgs/msg/float64.h>
+#include <std_msgs/msg/float64_multi_array.h>
+
 void initMainPage();
 void handleTouch();
-void parseSerial();
+void updateDepthAndTempDisplay();
+void thrusterStatus(int Sthrusters[]);
 
-//Pin Definitions
+// Pin Definitions
 #define TFT_DC 9
 #define TFT_CS 10
 #define TOUCH_CS 8
@@ -27,6 +37,9 @@ void parseSerial();
 // Display and touchscreen objects
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
+
+// Depth sensor
+MS5837 sensor;
 
 // Colors
 #define BATTERY_COLOR ILI9341_RED
@@ -54,9 +67,6 @@ XPT2046_Touchscreen ts(TOUCH_CS);
 #define THRUSTER_SPEED 1540
 #define MOVING_AVERAGE_SAMPLES 10
 
-// Depth sensor
-MS5837 sensor;
-
 // ===== Battery/Tether Variables =====
 int tether_new = 0;
 int tether_old = -1;
@@ -71,7 +81,7 @@ int voltage_buffer_index1 = 0;
 float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
 int voltage_buffer_index2 = 0;
 
-String status_new = "Touch 2nd row for surprise";
+String status_new = "ROS2 Display Ready";
 String status_old = "";
 
 // ===== Thruster/Devices Variables =====
@@ -86,6 +96,172 @@ float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 bool wasTouched = false;
 bool isInDryTestMode = false;
 int thruster_states[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+// ===== Depth/Temp Variables =====
+float current_depth = 0.0;
+float current_temperature = 0.0;
+float depth_old = -999.0;
+float temp_old = -999.0;
+
+// ===== ROS2 Variables =====
+// Publishers
+rcl_publisher_t sensors_depth_publisher;
+std_msgs__msg__Float64 sensors_depth_msg;
+
+rcl_publisher_t sensors_temperature_publisher;
+std_msgs__msg__Float64 sensors_temperature_msg;
+
+// Subscribers
+rcl_subscription_t propulsion_microseconds_subscriber;
+std_msgs__msg__Float32MultiArray propulsion_microseconds_msg;
+
+rcl_subscription_t battery_voltage_subscriber;
+std_msgs__msg__Float32MultiArray battery_voltage_msg;
+
+rcl_subscription_t device_status_subscriber;
+std_msgs__msg__Float32MultiArray device_status_msg;
+
+// ROS2 Core
+rclc_executor_t executor;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rcl_timer_t timer;
+
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+
+#define EXECUTE_EVERY_N_MS(MS, X)  do { \
+  static volatile int64_t init = -1; \
+  if (init == -1) { init = uxr_millis();} \
+  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
+} while (0)\
+
+enum states {
+  WAITING_AGENT,
+  AGENT_AVAILABLE,
+  AGENT_CONNECTED,
+  AGENT_DISCONNECTED
+} state;
+
+void error_loop() {
+    while(1) {
+        delay(100);
+    }
+}
+
+// ===== ROS2 Callbacks =====
+void propulsion_microseconds_callback(const void * msgin) {
+  const std_msgs__msg__Float32MultiArray * msg = (const std_msgs__msg__Float32MultiArray *)msgin;
+  for (int i = 0; i < 8 && i < msg->data.size; i++) {
+    microseconds[i] = (uint16_t)msg->data.data[i];
+  }
+  thrusterStatus(Sthrusters);
+}
+
+void battery_voltage_callback(const void * msgin) {
+  const std_msgs__msg__Float32MultiArray * msg = (const std_msgs__msg__Float32MultiArray *)msgin;
+  if (msg->data.size >= 2) {
+    batt_voltage_1_new = msg->data.data[0];
+    batt_voltage_2_new = msg->data.data[1];
+  }
+}
+
+void device_status_callback(const void * msgin) {
+  const std_msgs__msg__Float32MultiArray * msg = (const std_msgs__msg__Float32MultiArray *)msgin;
+  for (int i = 0; i < 7 && i < msg->data.size; i++) {
+    devices_new[i] = (int)msg->data.data[i];
+  }
+}
+
+// ===== Timer Callback (Publish depth and temp - just publishes already-read values) =====
+void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
+  RCLC_UNUSED(last_call_time);
+  if (timer != NULL) {
+    // Publish the already-read values (read in display_loop)
+    sensors_depth_msg.data = current_depth;
+    RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
+    
+    sensors_temperature_msg.data = current_temperature;
+    RCSOFTCHECK(rcl_publish(&sensors_temperature_publisher, &sensors_temperature_msg, NULL));
+  }
+}
+
+// ===== ROS2 Entity Creation =====
+bool create_entities() {
+  allocator = rcl_get_default_allocator();
+
+  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  RCCHECK(rclc_node_init_default(&node, "display_node", "", &support));
+
+  // Create publishers
+  RCCHECK(rclc_publisher_init_default(
+    &sensors_depth_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64),
+    "/sensors/depth/z"));  // Team's topic name - keep as is
+  
+  RCCHECK(rclc_publisher_init_default(
+    &sensors_temperature_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64),
+    "/sensors/temperature"));  // PLACEHOLDER - update with actual team topic name
+
+  // Create subscribers
+  RCCHECK(rclc_subscription_init_default(
+    &propulsion_microseconds_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/propulsion/microseconds"));
+
+  RCCHECK(rclc_subscription_init_default(
+    &battery_voltage_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/power/batteries/voltage"));
+
+  RCCHECK(rclc_subscription_init_default(
+    &device_status_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/devices/status"));
+
+  // Create timer (publish every 500ms = 2Hz)
+  //CHANGE DEPTH PUB FREQUENCY
+  //timer_timeout_ms=1000/Hz
+  
+  const unsigned int timer_timeout = 10; //67 = 15 Hz, 100 = 10 Hz, 1000 = 1 Hz
+  RCCHECK(rclc_timer_init_default(
+    &timer,
+    &support,
+    RCL_MS_TO_NS(timer_timeout),
+    timer_callback));
+
+  // Create executor
+  executor = rclc_executor_get_zero_initialized_executor();
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator));
+  RCCHECK(rclc_executor_add_timer(&executor, &timer));
+  RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber, &propulsion_microseconds_msg, &propulsion_microseconds_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &battery_voltage_subscriber, &battery_voltage_msg, &battery_voltage_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &device_status_subscriber, &device_status_msg, &device_status_callback, ON_NEW_DATA));
+
+  return true;
+}
+
+void destroy_entities() {
+  rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
+  (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+
+  rcl_publisher_fini(&sensors_depth_publisher, &node);
+  rcl_publisher_fini(&sensors_temperature_publisher, &node);
+  rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
+  rcl_subscription_fini(&battery_voltage_subscriber, &node);
+  rcl_subscription_fini(&device_status_subscriber, &node);
+  rcl_timer_fini(&timer);
+  rclc_executor_fini(&executor);
+  rcl_node_fini(&node);
+  rclc_support_fini(&support);
+}
 
 // ===== Button Structure =====
 struct Button {
@@ -108,8 +284,8 @@ Button buttons[] = {
   {0, 164, 320, 30, MAIN_RECT_COLOR, status_new},
   {0, 200, 78, 35, RED, "T"},
   {80, 200, 78, 35, RED, "DB"},
-  {160, 200, 78, 35, RED, "Celine"},
-  {240, 200, 78, 35, RED, "Mia"},
+  {160, 200, 78, 35, RED, "Depth"},
+  {240, 200, 78, 35, RED, "Temp"},
 };
 
 // Thruster buttons for main page
@@ -123,6 +299,51 @@ Button buttons_thrusters[] = {
   {240, 55, 38, 50, NUM_COLOR, "7"},
   {280, 55, 38, 50, NUM_COLOR, "8"},
 };
+
+// ===== Display Functions =====
+void updateDepthAndTempDisplay() {
+  // Update DEPTH display (index 12)
+  if (abs(current_depth - depth_old) > 0.01) {
+    depth_old = current_depth;
+    
+    char depth_buffer[10];
+    dtostrf(current_depth, 5, 2, depth_buffer);
+    String depthText = String(depth_buffer) + "m";
+    
+    tft.fillRoundRect(buttons[12].x, buttons[12].y,
+                      buttons[12].width, buttons[12].height, 6, RED);
+    
+    tft.setTextColor(WHITE);
+    tft.setTextSize(2);
+    int16_t x, y;
+    uint16_t w, h;
+    tft.getTextBounds(depthText, 0, 0, &x, &y, &w, &h);
+    tft.setCursor(buttons[12].x + (buttons[12].width - w) / 2,
+                  buttons[12].y + (buttons[12].height - h) / 2);
+    tft.print(depthText);
+  }
+  
+  // Update TEMPERATURE display (index 13)
+  if (abs(current_temperature - temp_old) > 0.1) {
+    temp_old = current_temperature;
+    
+    char temp_buffer[10];
+    dtostrf(current_temperature, 4, 1, temp_buffer);
+    String tempText = String(temp_buffer) + "C";
+    
+    tft.fillRoundRect(buttons[13].x, buttons[13].y,
+                      buttons[13].width, buttons[13].height, 6, RED);
+    
+    tft.setTextColor(WHITE);
+    tft.setTextSize(2);
+    int16_t x, y;
+    uint16_t w, h;
+    tft.getTextBounds(tempText, 0, 0, &x, &y, &w, &h);
+    tft.setCursor(buttons[13].x + (buttons[13].width - w) / 2,
+                  buttons[13].y + (buttons[13].height - h) / 2);
+    tft.print(tempText);
+  }
+}
 
 // ===== Battery/Tether Display Functions =====
 void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
@@ -171,8 +392,6 @@ float movingAverage2(float newValue) {
   voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
   return sum / MOVING_AVERAGE_SAMPLES;
 }
-
-
 
 void batt1(float V1) {
   V1 = round(V1 * 10.0) / 10.0;
@@ -275,8 +494,8 @@ void thrusterStatus(int Sthrusters[]) {
       Sthrusters[i] = 1;
     }
   }
-
 }
+
 void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
   if (isInDryTestMode) return;
 
@@ -304,6 +523,7 @@ void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
 }
 
 // ===== Device Functions =====
+// IMU, DVL, Pressure Sensors, Hydrophone, Actuator, Front Camera, Down Camera
 void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
   int temp_devices[] = {IMU, DVL, PS, HYD, ACT, FC, DC};
   uint16_t device_colors[] = {RED, GREEN};
@@ -341,13 +561,11 @@ void initializeThrusterMessages() {
 }
 
 void optimized_dry_test(int t) {
-    //no ros here so we will just print to serial for testing purposes
   Serial.print("[DRY TEST] Firing thruster ");
   Serial.println(t + 1);
   delay(1000);
   Serial.println("[DRY TEST] Done");
 }
-
 
 void updateThrusters_page2() {
   uint16_t thruster_colors[] = {DARK_GRAY, CYAN};
@@ -401,17 +619,20 @@ void initMainPage() {
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR);
 
-  for (const Button &btn : buttons) {
+  for (int i = 0; i < 14; i++) {
+    const Button &btn = buttons[i];
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    if (btn.label == "Touch 2nd row for surprise") {
+    
+    if (btn.label == "ROS2 Display Ready" || btn.label == "Depth" || btn.label == "Temp") {
       tft.setTextColor(BLACK);
     } else {
       tft.setTextColor(WHITE);
     }
+    
     int16_t x, y;
     uint16_t w, h;
     tft.getTextBounds(btn.label, 0, 0, &x, &y, &w, &h);
-
+    
     if (btn.label != "0.0V") {
       tft.setTextSize(2);
       if (btn.label == "IMU") {
@@ -425,7 +646,6 @@ void initMainPage() {
 
   updateStatusDisplay(status_new);
 
-  // Force battery refresh
   voltages_old[0] = -1;
   voltages_old[1] = -1;
   batt1(batt_voltage_1_new);
@@ -455,7 +675,7 @@ void handleTouch() {
           initDryTestPage();
         }
       } else {
-        if (x >= 8 && x <= 68 && y >= 10 && y <= 40) { // BACK button
+        if (x >= 8 && x <= 68 && y >= 10 && y <= 40) {
           isInDryTestMode = false;
           initMainPage();
           batt_voltage_1_new = 0.0;
@@ -487,57 +707,73 @@ void handleTouch() {
   }
 }
 
-
 // ===== Setup =====
 void display_setup() {
   Serial.begin(115200);
-
-  // Depth sensor init
+  
+  // Initialize depth sensor
   Wire.begin();
   if (!sensor.init()) {
     Serial.println("[WARN] Depth sensor init failed - continuing anyway");
+    status_new = "Depth Sensor Error";
+  } else {
+    Serial.println("[INFO] Depth sensor initialized");
+    sensor.setModel(MS5837::MS5837_30BA);
+    sensor.setFluidDensity(997);
   }
-  delay(1000);
-  sensor.setModel(MS5837::MS5837_30BA);
-  sensor.setFluidDensity(997);
 
-  // Display init
+  // Initialize display
   tft.begin();
   ts.begin();
   ts.setRotation(1);
 
-  //Init thruster command arrays
+  // Initialize thruster command arrays
   initializeThrusterMessages();
 
-  //Init moving average buffers
+  // Initialize moving average buffers
   for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
     voltage_buffer1[i] = 0;
     voltage_buffer2[i] = 0;
   }
 
-  //===== Hardcoded test values - replace with ROS2 data later =====
-  batt_voltage_1_new = 15.5;
-  batt_voltage_2_new = 14.0;
-  tether_new = 1;
-  devices_new[0] = 1; // IMU
-  devices_new[1] = 1; // DVL
-  devices_new[2] = 0; // PS
-  devices_new[3] = 1; // HYD
-  devices_new[4] = 0; // ACT
-  devices_new[5] = 1; // FC
-  devices_new[6] = 1; // DC
+  // Initialize ROS2 messages
+  propulsion_microseconds_msg.data.size = 8;
+  propulsion_microseconds_msg.data.capacity = 8;
+  propulsion_microseconds_msg.data.data = (float*)malloc(propulsion_microseconds_msg.data.capacity * sizeof(float));
+  
+  battery_voltage_msg.data.size = 2;
+  battery_voltage_msg.data.capacity = 2;
+  battery_voltage_msg.data.data = (float*)malloc(battery_voltage_msg.data.capacity * sizeof(float));
+  
+  device_status_msg.data.size = 7;
+  device_status_msg.data.capacity = 7;
+  device_status_msg.data.data = (float*)malloc(device_status_msg.data.capacity * sizeof(float));
+  
+  sensors_depth_msg.data = 0.0;
+  sensors_temperature_msg.data = 0.0;
 
+  // Initialize micro-ROS
+  set_microros_transports();
+  
+  // Start with initial display
   initMainPage();
+  
+  // Initial state
+  state = WAITING_AGENT;
 }
-//===== Loop =====
+
+// ===== Loop =====
 void display_loop() {
   // Handle touch input
   handleTouch();
-
-  // Read depth sensor
+  
+  // Read depth sensor (read() returns void, just call it)
   sensor.read();
-
-  // Update display with current data
+  current_depth = sensor.depth();
+  current_temperature = sensor.temperature();
+  updateDepthAndTempDisplay();
+  
+  // Update other display elements
   batt1(batt_voltage_1_new);
   batt2(batt_voltage_2_new);
   tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
@@ -545,8 +781,33 @@ void display_loop() {
          devices_new[4], devices_new[5], devices_new[6]);
   thrusters(Sthrusters[0], Sthrusters[1], Sthrusters[2], Sthrusters[3],
             Sthrusters[4], Sthrusters[5], Sthrusters[6], Sthrusters[7]);
-
-  delay(10);
+  
+  // ROS2 state machine
+  switch (state) {
+    case WAITING_AGENT:
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      break;
+    case AGENT_AVAILABLE:
+      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (state == WAITING_AGENT) {
+        destroy_entities();
+      }
+      break;
+    case AGENT_CONNECTED:
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(250, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      if (state == AGENT_CONNECTED) {
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)); //changed from 100
+      }
+      break;
+    case AGENT_DISCONNECTED:
+      destroy_entities();
+      state = WAITING_AGENT;
+      break;
+    default:
+      break;
+  }
+  
+  //delay(10);
 }
 
 #endif
