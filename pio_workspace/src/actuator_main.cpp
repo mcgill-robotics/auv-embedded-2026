@@ -3,59 +3,52 @@
 #include <Arduino.h>
 #include <Servo.h>
 
-#define SERVO_PIN 8
+#define TORPEDO_PIN 8
 
-// Hitec D954SW pulse range
-#define PULSE_MIN 1065  // fully open
-#define PULSE_MID 1450 // center
-#define PULSE_MAX 1900 // fully closed
+// Torpedo Positions
+#define OPEN_ONE 1065  // shoot first torpedo, second is closed
+#define CLOSED 1450 // both closed
+#define OPEN_BOTH 1900 // shoots second torpedo, both open
 
-Servo grabberServo;
+// Declare Servo object
+Servo torpedoServo;
 
-void sweepTo(int targetUs, int stepDelay =0.0001)
+// Function to move torpedo to a target position
+// TO DO: rename targetUs variable to just "position" or something similar so not confused with time variable
+void sweepTorpedo(int targetUs, int stepDelay =0.0001)
 {
-  int currentUs = grabberServo.readMicroseconds();
+  int currentUs = torpedoServo.readMicroseconds();
   int step = (targetUs > currentUs) ? 50 : -50;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          // 10µs per step
 
   for (int us = currentUs; (step > 0) ? (us <= targetUs) : (us >= targetUs); us += step)
   {
-    grabberServo.writeMicroseconds(us);
+    torpedoServo.writeMicroseconds(us);
     delay(stepDelay);
   }
-  grabberServo.writeMicroseconds(targetUs); // ensure we land exactly on target
+  torpedoServo.writeMicroseconds(targetUs); // ensure we land exactly on target
+    
 }
 
+// Setup function
 void actuator_setup()
 {
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-
-  grabberServo.attach(SERVO_PIN, PULSE_MIN, PULSE_MAX); // tell the library the valid range
-  delay(500);
-  grabberServo.writeMicroseconds(PULSE_MID); // start at center
+  torpedoServo.attach(TORPEDO_PIN); 
+  moveTorpedo(CLOSED); // start at center
   delay(500);
 }
-void resetstate(){
-  sweepTo(PULSE_MID);
-  delay(1000);
+
+// Move torpedo to specified position
+void moveTorpedo(int position, int torpedoDelay=1000){
+  sweepTorpedo(position);
+  delay(torpedoDelay);
 }
 
-void shootOne(){
-  sweepTo(PULSE_MIN);
-  delay(1000);
-}
-
-void shootTwo(){
-  sweepTo(PULSE_MAX);
-  delay(1000);
-}
-
+// Main loopss
 void actuator_loop()
 {
-  resetstate();
-  shootOne();
-  shootTwo();
-
+  moveTorpedo(CLOSED);
+  moveTorpedo(OPEN_ONE);
+  moveTorpedo(OPEN_BOTH);
 }
 
 #endif
