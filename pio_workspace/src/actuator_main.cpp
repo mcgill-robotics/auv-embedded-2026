@@ -6,16 +6,16 @@
 #define SERVO_PIN 8
 
 // Hitec D954SW pulse range
-#define PULSE_MIN 900  // fully open
-#define PULSE_MID 1500 // center
-#define PULSE_MAX 2100 // fully closed
+#define PULSE_MIN 1065  // fully open
+#define PULSE_MID 1450 // center
+#define PULSE_MAX 1900 // fully closed
 
 Servo grabberServo;
 
-void sweepTo(int targetUs, int stepDelay = 15)
+void sweepTo(int targetUs, int stepDelay =0.0001)
 {
   int currentUs = grabberServo.readMicroseconds();
-  int step = (targetUs > currentUs) ? 20 : -20;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          // 10µs per step
+  int step = (targetUs > currentUs) ? 50 : -50;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          // 10µs per step
 
   for (int us = currentUs; (step > 0) ? (us <= targetUs) : (us >= targetUs); us += step)
   {
@@ -35,17 +35,27 @@ void actuator_setup()
   grabberServo.writeMicroseconds(PULSE_MID); // start at center
   delay(500);
 }
+void resetstate(){
+  sweepTo(PULSE_MID);
+  delay(1000);
+}
+
+void shootOne(){
+  sweepTo(PULSE_MIN);
+  delay(1000);
+}
+
+void shootTwo(){
+  sweepTo(PULSE_MAX);
+  delay(1000);
+}
 
 void actuator_loop()
 {
-  sweepTo(PULSE_MIN); // open
-  delay(1000);
+  resetstate();
+  shootOne();
+  shootTwo();
 
-  sweepTo(PULSE_MID); // center
-  delay(1000);
-
-  sweepTo(PULSE_MAX); // close
-  delay(1000);
 }
 
 #endif
