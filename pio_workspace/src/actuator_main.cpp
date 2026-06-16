@@ -18,14 +18,15 @@
 // std msg type libraries
 #include <std_msgs/msg/u_int8.h>
 
-// Define pins on Teensy
-#define LED_PIN 13
-#define TORPEDO_PIN 8
-
 // Define torpedo Positions
 #define OPEN_ONE 1065  // shoot first torpedo, second is closed
 #define CLOSED 1450    // both closed
 #define OPEN_BOTH 1900 // shoots second torpedo, both open
+
+// Define pins on Teensy
+#define LED_PIN 13
+#define TORPEDO_PIN 8
+
 
 // Macro for non-blocking timing in the state machine
 #define EXECUTE_EVERY_N_MS(MS, X)  do { \
@@ -45,6 +46,17 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
+
+enum torpedo_positions {
+  closed=0,
+  shoot_one=1,
+  shoot_two=2
+} command;
+
+// Forward declarations
+bool create_entities();
+void destroy_entities();
+
 // Define states for the connection state machine
 enum states {
   WAITING_AGENT,
@@ -61,9 +73,6 @@ void connectUSB() {
   USB1_USBCMD = 1;
 }
 
-// Forward declarations
-bool create_entities();
-void destroy_entities();
 
 // Function to move torpedo to a target position
 void sweepTorpedo(int targetPosition, int stepDelay = 1)
@@ -91,14 +100,14 @@ void torpedo_callback(const void * msgin) {
   uint8_t command = msg->data;
 
   switch (command) {
-    case 0:
-      moveTorpedo(OPEN_ONE); // 0 triggers shooting the first torpedo
+    case closed:
+      moveTorpedo(CLOSED); // 0 triggers moving to the closed position
       break;
-    case 1:
-      moveTorpedo(OPEN_BOTH); // 1 triggers shooting the second torpedo
+    case shoot_one:
+      moveTorpedo(OPEN_ONE); // 1 triggers shooting the first
       break;
-    case 2:
-      moveTorpedo(CLOSED); // 2 triggers moving to the closed position
+    case shoot_two:
+      moveTorpedo(OPEN_BOTH); // 2 triggers shooting the second torpedo
       break;
     default:
       // Ignore unmapped commands
@@ -124,8 +133,7 @@ void actuator_setup()
   delay(500);
 
   // Set initial msg to CLOSED position'
-    // TO DO: maybe change the numbering of the states, make this a variable to be parasable (enum)
-  msg.data = 2;
+  msg.data = closed;
 
   // Initialize state machine
   state = WAITING_AGENT;
