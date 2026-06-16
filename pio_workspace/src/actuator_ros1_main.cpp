@@ -3,80 +3,51 @@
 #include "actuator_ros1_main.h"
 
 #include <Arduino.h>
-
 #include <Servo.h>
 
-#include <ros.h> 
-#include <std_msgs/UInt16.h>  
-#include <std_msgs/Bool.h>    
+#define SERVO_PIN 9
 
-// servo pin definition
-const int SERVO_PIN = 9;
+// Hitec D954SW pulse range
+#define PULSE_MIN 900  // fully open
+#define PULSE_MID 1500 // center
+#define PULSE_MAX 2100 // fully closed
 
-// create node handle
-ros::NodeHandle nh;
-
-// create grabber servo object
 Servo grabberServo;
 
-// function prototypes
-void servoPosition_CB(const std_msgs::UInt16& msg);
-void servoSweep_CB(const std_msgs::Bool& msg);
+void sweepTo(int targetUs, int stepDelay = 15)
+{
+  int currentUs = grabberServo.readMicroseconds();
+  int step = (targetUs > currentUs) ? 10 : -10; // 10µs per step
 
-// subscribe to topics
-ros::Subscriber<std_msgs::UInt16> grabberPositionSub("servo/position", &servoPosition_CB);
-ros::Subscriber<std_msgs::Bool> grabberSweepSub("servo/sweep", &servoSweep_CB);
-
-// setup function
-void actuator_ros1_setup() {
-    // pwm teensy pin connected to grabber
-  pinMode(SERVO_PIN, OUTPUT);
-    // attach servo object to teensy pin and check for success
-  if (grabberServo.attach(SERVO_PIN)) {
-    // servo attached successfully
-  } else {
-    // servo attachment failed - could add LED blink or error handling here
+  for (int us = currentUs; (step > 0) ? (us <= targetUs) : (us >= targetUs); us += step)
+  {
+    grabberServo.writeMicroseconds(us);
+    delay(stepDelay);
   }
-    // initialize ros node
-  nh.initNode();
-    // subscribe to ros topics
-  nh.subscribe(grabberPositionSub);
-  nh.subscribe(grabberSweepSub);
+  grabberServo.writeMicroseconds(targetUs); // ensure we land exactly on target
 }
 
-// check for new messages with 1ms delay
-void actuator_ros1_loop() {
-  nh.spinOnce();
-  delay(1);
+void actuator_ros1_setup()
+{
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);
+
+  grabberServo.attach(SERVO_PIN, PULSE_MIN, PULSE_MAX); // tell the library the valid range
+  delay(500);
+  grabberServo.writeMicroseconds(PULSE_MID); // start at center
+  delay(500);
 }
 
-// move grabber servo to position specified by ros message
-void servoPosition_CB(const std_msgs::UInt16& msg) {
-  // constrain servo position to valid range (0-180 degrees)
-  int position = constrain(msg.data, 0, 180);
-  grabberServo.write(position);
-}
+void actuator_ros1_loop()
+{
+  sweepTo(PULSE_MIN); // open
+  delay(1000);
 
-// sweep servo based on boolean message
-void servoSweep_CB(const std_msgs::Bool& msg) {
-  if (msg.data) {
-    // sweep from 0 to 180 degrees
-    for (int pos = 0; pos <= 180; pos += 1) {
-      grabberServo.write(pos);
-      delay(15);
-      // check for new messages during sweep to maintain some responsiveness
-      nh.spinOnce();
-    }
-  }
-  else {
-    // sweep from 180 to 0 degrees
-    for (int pos = 180; pos >= 0; pos -= 1) {
-      grabberServo.write(pos);
-      delay(15);
-      // check for new messages during sweep to maintain some responsiveness
-      nh.spinOnce();
-    }
-  }
+  sweepTo(PULSE_MID); // center
+  delay(1000);
+
+  sweepTo(PULSE_MAX); // close
+  delay(1000);
 }
 
 #endif

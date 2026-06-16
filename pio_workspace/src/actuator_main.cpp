@@ -2,51 +2,62 @@
 
 #include "actuator_main.h"
 
+// Basic libraries
 #include <Arduino.h>
 #include <Servo.h>
 
+// MicroROS libraries
 #include <micro_ros_arduino.h>
-
+#include <stdio.h>
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
+#include <rmw_microros/rmw_microros.h> // Needed for pinging the agent
 
-#include <std_msgs/msg/u_int16.h>
-#include <std_msgs/msg/bool.h>
+// std msg type libraries
+#include <std_msgs/msg/u_int8.h>
 
-#define SERVO_PIN 9
+// Define torpedo Positions
+#define OPEN_ONE 1065  // shoot first torpedo, second is closed
+#define CLOSED 1450    // both closed
+#define OPEN_BOTH 1900 // shoots second torpedo, both open
+
+// Define pins on Teensy
 #define LED_PIN 13
+#define TORPEDO_PIN 8
 
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){ error_loop(); }}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){} }
 
+// Macro for non-blocking timing in the state machine
 #define EXECUTE_EVERY_N_MS(MS, X)  do { \
   static volatile int64_t init = -1; \
-  if (init == -1) { init = uxr_millis(); } \
-  if (uxr_millis() - init > MS) { X; init = uxr_millis(); } \
+  if (init == -1) { init = uxr_millis();} \
+  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)
 
+// Declare Servo objects
+Servo torpedoServo;
 
-// -------------------------------
-// GLOBALS
-// -------------------------------
-
-Servo grabberServo;
-
-// micro-ROS core handles
-rclc_support_t support;
-rcl_node_t node;
-rcl_allocator_t allocator;
-
-rcl_subscription_t position_subscriber;
-std_msgs__msg__UInt16 position_msg;
-
-rcl_subscription_t sweep_subscriber;
-std_msgs__msg__Bool sweep_msg;
-
+// Declare microROS variables
+rcl_subscription_t subscriber;
+std_msgs__msg__UInt8 msg;
 rclc_executor_t executor;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
 
+
+enum torpedo_positions {
+  closed=0,
+  shoot_one=1,
+  shoot_two=2
+} command;
+
+// Forward declarations
+bool create_entities();
+void destroy_entities();
+
+// Define states for the connection state machine
 enum states {
   WAITING_AGENT,
   AGENT_AVAILABLE,
@@ -54,169 +65,170 @@ enum states {
   AGENT_DISCONNECTED
 } state;
 
+// Allocations fail if USB port is disconnected and reconnected, need to manually TOTO the port
+void disconnectUSB() {
+  USB1_USBCMD = 0;
+}
+void connectUSB() {
+  USB1_USBCMD = 1;
+}
 
-// -------------------------------
-// ERROR BLINK
-// -------------------------------
-void error_loop() {
-  for (int i = 0; i < 10; i++) {
-    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-    delay(100);
+
+// Function to move torpedo to a target position
+void sweepTorpedo(int targetPosition, int stepDelay = 1)
+{
+  int currentPosition = torpedoServo.readMicroseconds();
+  int step = (targetPosition > currentPosition) ? 50 : -50;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  // 10µs per step
+
+  for (int us = currentPosition; (step > 0) ? (us <= targetPosition) : (us >= targetPosition); us += step)
+  {
+    torpedoServo.writeMicroseconds(us);
+    delay(stepDelay);
   }
+  torpedoServo.writeMicroseconds(targetPosition); // ensure we land exactly on target
+}
+
+// Move torpedo to specified position
+void moveTorpedo(int position, int torpedoDelay = 1000) {
+  sweepTorpedo(position);
+  delay(torpedoDelay);
+}
+
+// Callback when msg received
+void torpedo_callback(const void * msgin) {
+  const std_msgs__msg__UInt8 * msg = (const std_msgs__msg__UInt8 *)msgin;
+  uint8_t command = msg->data;
+
+  switch (command) {
+    case closed:
+      moveTorpedo(CLOSED); // 0 triggers moving to the closed position
+      break;
+    case shoot_one:
+      moveTorpedo(OPEN_ONE); // 1 triggers shooting the first
+      break;
+    case shoot_two:
+      moveTorpedo(OPEN_BOTH); // 2 triggers shooting the second torpedo
+      break;
+    default:
+      // Ignore unmapped commands
+      break;
+  }
+}
+
+// Setup function
+void actuator_setup()
+{
+  // LED for debugging
+  pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
+
+  // Set transport to serial
+  Serial.begin(115200);
+  set_microros_transports();
+  delay(500);
+
+  // Set up torpedo servo
+  torpedoServo.attach(TORPEDO_PIN); 
+  moveTorpedo(CLOSED); // start at center
+  delay(500);
+
+  // Set initial msg to CLOSED position'
+  msg.data = closed;
+
+  // Initialize state machine
+  state = WAITING_AGENT;
 }
 
-
-// -------------------------------
-// SERVO CALLBACKS
-// -------------------------------
-void servo_position_callback(const void *msgin)
-{
-  const std_msgs__msg__UInt16 *msg = (const std_msgs__msg__UInt16 *) msgin;
-
-  int position = constrain(msg->data, 0, 180);
-  grabberServo.write(position);
-}
-
-void servo_sweep_callback(const void *msgin)
-{
-  const std_msgs__msg__Bool *msg = (const std_msgs__msg__Bool *) msgin;
-
-  if (msg->data) {
-    // sweep forward
-    grabberServo.write(180);
-  } else {
-    // sweep backward
-    grabberServo.write(0);
-  }
-}
-
-
-// -------------------------------
-// CREATE ENTITIES
-// -------------------------------
+// Function to dynamically allocate ROS 2 entities when connected
 bool create_entities()
 {
   allocator = rcl_get_default_allocator();
 
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  // Initialize support structure
+  rcl_ret_t rc = rclc_support_init(&support, 0, NULL, &allocator);
+  if (rc != RCL_RET_OK) return false;
 
-  RCCHECK(rclc_node_init_default(
+  // Initialize node
+  rc = rclc_node_init_default(&node, "torpedo_actuator_node", "", &support);
+  if (rc != RCL_RET_OK) return false;
+
+  // Initialize subscriber
+  rc = rclc_subscription_init_default(
+    &subscriber,
     &node,
-    "actuator_node",
-    "",
-    &support
-  ));
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
+    "torpedo_command"
+  );
+  if (rc != RCL_RET_OK) return false;
 
-  RCCHECK(rclc_subscription_init_default(
-    &position_subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt16),
-    "/servo/position"
-  ));
+  // Initialize executor
+  rc = rclc_executor_init(&executor, &support.context, 1, &allocator);
+  if (rc != RCL_RET_OK) return false;
 
-  RCCHECK(rclc_subscription_init_default(
-    &sweep_subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
-    "/servo/sweep"
-  ));
-
-  executor = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
-
-  RCCHECK(rclc_executor_add_subscription(
-    &executor,
-    &position_subscriber,
-    &position_msg,
-    &servo_position_callback,
-    ON_NEW_DATA
-  ));
-
-  RCCHECK(rclc_executor_add_subscription(
-    &executor,
-    &sweep_subscriber,
-    &sweep_msg,
-    &servo_sweep_callback,
-    ON_NEW_DATA
-  ));
+  rc = rclc_executor_add_subscription(&executor, &subscriber, &msg, &torpedo_callback, ON_NEW_DATA);
+  if (rc != RCL_RET_OK) return false;
 
   return true;
 }
 
-
-// -------------------------------
-// DESTROY ENTITIES
-// -------------------------------
+// Function to safely destroy ROS 2 entities if connection drops
 void destroy_entities()
 {
-  rcl_subscription_fini(&position_subscriber, &node);
-  rcl_subscription_fini(&sweep_subscriber, &node);
-  rclc_executor_fini(&executor);
+  disconnectUSB();
+
+  rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
+  (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+
+  rcl_subscription_fini(&subscriber, &node);
   rcl_node_fini(&node);
+  rclc_executor_fini(&executor);
   rclc_support_fini(&support);
+
+  connectUSB();
 }
 
-
-// -------------------------------
-// SETUP
-// -------------------------------
-void actuator_setup()
-{
-  pinMode(LED_PIN, OUTPUT);
-
-  // Attach servo to pin
-  grabberServo.attach(SERVO_PIN);
-
-  // micro-ROS transport
-  Serial.begin(115200);
-  set_microros_transports();
-  delay(2000);
-
-  // initialize message memory
-  position_msg.data = 0;
-  sweep_msg.data = false;
-
-  state = WAITING_AGENT;
-}
-
-
-// -------------------------------
-// MAIN LOOP
-// -------------------------------
+// Main loop
 void actuator_loop()
 {
-  switch(state)
-  {
+  switch (state) {
     case WAITING_AGENT:
-      EXECUTE_EVERY_N_MS(500,
-        state = (rmw_uros_ping_agent(100, 1) == RMW_RET_OK) ?
-                 AGENT_AVAILABLE : WAITING_AGENT;
-      );
+      // Ping agent every 500ms to see if it's there
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
       break;
-
+      
     case AGENT_AVAILABLE:
-      state = (create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
-      if (state == WAITING_AGENT) destroy_entities();
-      break;
-
-    case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(200,
-        state = (rmw_uros_ping_agent(100, 1) == RMW_RET_OK) ?
-                 AGENT_CONNECTED : AGENT_DISCONNECTED;
-      );
-      if (state == AGENT_CONNECTED) {
-        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(50));
+      // Agent found, attempt to create node/subscriber
+      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (state == WAITING_AGENT) {
+        destroy_entities(); // Clean up if creation failed midway
       }
       break;
-
+      
+    case AGENT_CONNECTED:
+      // Continuously check connection every 200ms
+      EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      
+      if (state == AGENT_CONNECTED) {
+        // Only spin executor if still safely connected
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+      }
+      break;
+      
     case AGENT_DISCONNECTED:
+      // Connection lost, destroy entities to avoid memory leaks and restart
       destroy_entities();
       state = WAITING_AGENT;
       break;
+      
+    default:
+      break;
   }
 
-  digitalWrite(LED_PIN, (state == AGENT_CONNECTED) ? HIGH : LOW);
+  if (state == AGENT_CONNECTED) {
+    digitalWrite(LED_PIN, 1);
+  } else {
+    digitalWrite(LED_PIN, 0);
+  }
 }
 
 #endif
