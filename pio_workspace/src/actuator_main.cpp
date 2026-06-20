@@ -157,7 +157,7 @@ bool create_entities()
     &subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
-    "torpedo_command"
+    "/actuators/torpedo"
   );
   if (rc != RCL_RET_OK) return false;
 
