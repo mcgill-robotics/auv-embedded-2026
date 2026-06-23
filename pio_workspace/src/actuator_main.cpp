@@ -53,8 +53,10 @@ Servo torpedoServo;
 Servo grabberServo;
 
 // Declare microROS variables
-rcl_subscription_t subscriber;
-std_msgs__msg__UInt8 msg;
+rcl_subscription_t torpedo_subscriber;
+rcl_subscription_t grabber_subscriber;
+std_msgs__msg__UInt8 torpedo_msg;
+std_msgs__msg__UInt8 grabber_msg;
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -66,6 +68,12 @@ enum torpedo_positions
   shoot_one = 1,
   shoot_two = 2
 } torpedo_command;
+
+enum grabber_positions
+{
+  grabber_open = 0,
+  grabber_closed = 1
+} grabber_command;
 
 // Forward declarations
 bool create_entities();
@@ -127,16 +135,15 @@ void moveGrabber(int position, int grabberDelay = 5000)
   while (millis() - holdStart < (unsigned long)grabberDelay)
   {
     sweepGrabber(position);
-    delay(15); // small pause between re-attempts, same as sweepTo
+    delay(15);
   }
-  grabberServo.writeMicroseconds(position); // ensure we land exactly on target
+  grabberServo.writeMicroseconds(position);
 }
-
 
 void torpedo_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
-  uint8_t torped_command = msg->data;
+  torpedo_command = (torpedo_positions)msg->data;
 
   switch (torpedo_command)
   {
@@ -154,7 +161,23 @@ void torpedo_callback(const void *msgin)
   }
 }
 
+void grabber_callback(const void *msgin)
+{
+  const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
+  grabber_command = (grabber_positions)msg->data;
 
+  switch (grabber_command)
+  {
+  case grabber_open:
+    moveGrabber(GRABBER_OPEN);
+    break;
+  case grabber_closed:
+    moveGrabber(GRABBER_CLOSED);
+    break;
+  default:
+    break;
+  }
+}
 
 void actuator_setup()
 {
@@ -168,9 +191,9 @@ void actuator_setup()
 
   // Attach and initialize grabber servo
   grabberServo.attach(GRABBER_PIN);
-  delay(100); // give the servo time to power up
+  delay(100);
   grabberServo.writeMicroseconds(GRABBER_CLOSED);
-  delay(500); // let it reach start position
+  delay(500);
 
   // Attach and initialize torpedo servo
   torpedoServo.attach(TORPEDO_PIN);
@@ -178,13 +201,12 @@ void actuator_setup()
   torpedoServo.writeMicroseconds(CLOSED);
   delay(500);
 
-  // Set initial msg to CLOSED position'
-  msg.data = closed;
+  // Set initial msgs
+  torpedo_msg.data = closed;
+  grabber_msg.data = grabber_open;
 
   // Initialize state machine
   state = WAITING_AGENT;
-
-
 }
 
 bool create_entities()
@@ -195,23 +217,38 @@ bool create_entities()
   if (rc != RCL_RET_OK)
     return false;
 
-  rc = rclc_node_init_default(&node, "torpedo_actuator_node", "", &support);
+  rc = rclc_node_init_default(&node, "actuator_node", "", &support);
   if (rc != RCL_RET_OK)
     return false;
 
+  // Torpedo subscriber
   rc = rclc_subscription_init_default(
-      &subscriber,
+      &torpedo_subscriber,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
       "/actuators/torpedo");
   if (rc != RCL_RET_OK)
     return false;
 
-  rc = rclc_executor_init(&executor, &support.context, 1, &allocator);
+  // Grabber subscriber
+  rc = rclc_subscription_init_default(
+      &grabber_subscriber,
+      &node,
+      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
+      "/actuators/grabber");
   if (rc != RCL_RET_OK)
     return false;
 
-  rc = rclc_executor_add_subscription(&executor, &subscriber, &msg, &torpedo_callback, ON_NEW_DATA);
+  // Executor needs 2 handles now (one per subscriber)
+  rc = rclc_executor_init(&executor, &support.context, 2, &allocator);
+  if (rc != RCL_RET_OK)
+    return false;
+
+  rc = rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA);
+  if (rc != RCL_RET_OK)
+    return false;
+
+  rc = rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA);
   if (rc != RCL_RET_OK)
     return false;
 
@@ -225,7 +262,8 @@ void destroy_entities()
   rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
   (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-  rcl_subscription_fini(&subscriber, &node);
+  rcl_subscription_fini(&torpedo_subscriber, &node);
+  rcl_subscription_fini(&grabber_subscriber, &node);
   rcl_node_fini(&node);
   rclc_executor_fini(&executor);
   rclc_support_fini(&support);
@@ -238,32 +276,26 @@ void actuator_loop()
   switch (state)
   {
   case WAITING_AGENT:
-    // Ping agent every 500ms to see if it's there
     EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
     break;
 
   case AGENT_AVAILABLE:
-    // Agent found, attempt to create node/subscriber
     state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
     if (state == WAITING_AGENT)
     {
-      destroy_entities(); // Clean up if creation failed midway
+      destroy_entities();
     }
     break;
 
   case AGENT_CONNECTED:
-    // Continuously check connection every 200ms
     EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-
     if (state == AGENT_CONNECTED)
     {
-      // Only spin executor if still safely connected
       rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
     }
     break;
 
   case AGENT_DISCONNECTED:
-    // Connection lost, destroy entities to avoid memory leaks and restart
     destroy_entities();
     state = WAITING_AGENT;
     break;
@@ -280,12 +312,6 @@ void actuator_loop()
   {
     digitalWrite(LED_PIN, 0);
   }
-
-  /*
-  moveGrabber(GRABBER_CLOSED);
-  moveGrabber(GRABBER_OPEN);
-  delay(1000);
-  */
 }
 
 #endif
