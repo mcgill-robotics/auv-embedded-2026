@@ -1,0 +1,8 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "AD4001")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_AD4001BRMZ/KiCADv6/2026-05-08_18-44-11.kicad_sym")(options "")(descr ""))
+  (lib (name "ADA4945")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADA4945-1ACPZ-RL(1)/KiCADv6/2026-05-08_18-52-38.kicad_sym")(options "")(descr ""))
+  (lib (name "ADA4807")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADA4807-1ARJZ-R2/KiCADv6/2026-05-08_19-00-15.kicad_sym")(options "")(descr ""))
+  (lib (name "ADR4550BRZ")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADR4550BRZ/KiCADv6/2026-05-08_19-34-33.kicad_sym")(options "")(descr ""))
+  (lib (name "MOSFET")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_2SJ305-TE85-F-/KiCADv6/2026-05-20_19-19-45.kicad_sym")(options "")(descr ""))
+)

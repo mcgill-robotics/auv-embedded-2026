@@ -1,0 +1,20 @@
+site_name: Hydrophone Shield design documentation
+repo_url: https://github.com/mcgill-robotics/auv-embedded-2026/
+
+nav:
+    - Home: index.md
+    - Design Iterations:
+        - version 1.0: design/v1.0/change_log.md
+        - version 1.1: design/v1.1/change_log.md
+    - Design:
+        - Signal chain design: design/signal-chain.md
+
+theme: readthedocs
+
+markdown_extensions:
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js

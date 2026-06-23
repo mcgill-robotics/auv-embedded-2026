@@ -3,9 +3,9 @@ import os
 import numpy as np
 
 
-JETSON_IP = "localhost"#"ubuntu.local"
+JETSON_IP = "ubuntu.local"
 PORT = 9000
-OUTFILE = "ad3_stream_stereo_f32le.bin"
+OUTFILE = "ad3_stream_stereo_40kHz.bin"
 READ_SIZE = 65536
 
 EXPECTED_BIAS_V = 1.6

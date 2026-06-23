@@ -1,0 +1,7 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "ADR4550BRZ")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADR4550BRZ/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "ADA4807-1ARJZ-R2")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADA4807-1ARJZ-R2/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "ADA4945-1ACPZ-RL")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_ADA4945-1ACPZ-RL(1)/KiCADv6/footprints.pretty")(options "")(descr ""))
+  (lib (name "AD4001BRMZ")(type "KiCad")(uri "/Users/oscartesniere/Downloads/ul_AD4001BRMZ/KiCADv6/footprints.pretty")(options "")(descr ""))
+)

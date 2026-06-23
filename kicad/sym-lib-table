@@ -1,0 +1,13 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "AD4001")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_AD4001BRMZ/2026-05-08_18-44-11.kicad_sym")(options "")(descr ""))
+  (lib (name "ADA4945")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADA4945-1ACPZ-RL/2026-05-08_18-52-38.kicad_sym")(options "")(descr ""))
+  (lib (name "ADA4807")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADA4807-1ARJZ-R2/2026-05-08_19-00-15.kicad_sym")(options "")(descr ""))
+  (lib (name "ADR4550BRZ")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADR4550BRZ/2026-05-08_19-34-33.kicad_sym")(options "")(descr ""))
+  (lib (name "MOSFET")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_2SJ305-TE85-F-/2026-05-20_19-19-45.kicad_sym")(options "")(descr ""))
+  (lib (name "1.8V LDO")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADP7118AUJZ-1-8-R7/2026-05-29_03-43-56.kicad_sym")(options "")(descr ""))
+  (lib (name "3.3V LDO")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADP7118AUJZ-3-3-R7/2026-05-29_03-44-10.kicad_sym")(options "")(descr ""))
+  (lib (name "AD4525")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADR4525CRZ-R7/2026-05-29_03-52-58.kicad_sym")(options "")(descr ""))
+  (lib (name "AD8421")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/ul_ADS1298IPAG/2026-06-05_22-28-02.kicad_sym")(options "")(descr ""))
+  (lib (name "twinax")(type "KiCad")(uri "${KIPRJMOD}/libraries/symbols/CJT-T-P-HH-RA-BH1/CJT-T-P-XX-RA-BH1.kicad_sym")(options "")(descr ""))
+)
