@@ -124,7 +124,13 @@ float ADCSensors::convertVoltage(float adcVoltage) {
   VBAT NOM: 14.8  | ADC INPUT: 1.384
   VBAT HIGH: 16.8 | ADC INPUT: 2.586
   */
+ if (adcVoltage < 1) {
+  return 0;
+ }
+ else {
   return (adcVoltage * 2) * (16.8 - 12.8) / (2.586 - 0.180) + 12.5;
+ }
+  
 }
 
 // Convert ADC values into meaningful real-life current values based on circuit components
