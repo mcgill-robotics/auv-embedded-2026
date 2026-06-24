@@ -62,6 +62,7 @@ rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
 
+// Torpedo position commands
 enum torpedo_positions
 {
   closed = 0,
@@ -69,6 +70,7 @@ enum torpedo_positions
   shoot_two = 2
 } torpedo_command;
 
+// Grabber position commands
 enum grabber_positions
 {
   grabber_open = 0,
@@ -88,6 +90,7 @@ enum states
   AGENT_DISCONNECTED
 } state;
 
+// Functions to manually redeclare USB to deal with disconnect/reconnect
 void disconnectUSB()
 {
   USB1_USBCMD = 0;
@@ -97,6 +100,7 @@ void connectUSB()
   USB1_USBCMD = 1;
 }
 
+// Function to move torpedo servo to a specific numeric position
 void sweepTorpedo(int targetPosition, int stepDelay = 1)
 {
   int currentPosition = torpedoServo.readMicroseconds();
@@ -110,6 +114,7 @@ void sweepTorpedo(int targetPosition, int stepDelay = 1)
   torpedoServo.writeMicroseconds(targetPosition);
 }
 
+// Function to move grabber servo to a specific numeric position
 void sweepGrabber(int targetPosition, int stepDelay = 2)
 {
   int currentPosition = grabberServo.readMicroseconds();
@@ -123,12 +128,14 @@ void sweepGrabber(int targetPosition, int stepDelay = 2)
   grabberServo.writeMicroseconds(targetPosition);
 }
 
+// Function to move torpedo servo to one of 3 pre-determined command positions
 void moveTorpedo(int position, int torpedoDelay = 1000)
 {
   sweepTorpedo(position);
   delay(torpedoDelay);
 }
 
+// Function to move grabber servo to one of 2 pre-determined command positions
 void moveGrabber(int position, int grabberDelay = 5000)
 {
   unsigned long holdStart = millis();
@@ -140,6 +147,7 @@ void moveGrabber(int position, int grabberDelay = 5000)
   grabberServo.writeMicroseconds(position);
 }
 
+// Function to parse torpedo msg and move torpedo servo accordingly
 void torpedo_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
@@ -161,6 +169,7 @@ void torpedo_callback(const void *msgin)
   }
 }
 
+// Function to parse grabber msg and move grabber servo accordingly
 void grabber_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
@@ -179,6 +188,7 @@ void grabber_callback(const void *msgin)
   }
 }
 
+// Setup function
 void actuator_setup()
 {
   pinMode(LED_PIN, OUTPUT);
@@ -209,6 +219,7 @@ void actuator_setup()
   state = WAITING_AGENT;
 }
 
+// Create all entities required for ros
 bool create_entities()
 {
   allocator = rcl_get_default_allocator();
@@ -255,6 +266,7 @@ bool create_entities()
   return true;
 }
 
+// Destroy all entities required for ros
 void destroy_entities()
 {
   disconnectUSB();
@@ -271,6 +283,7 @@ void destroy_entities()
   connectUSB();
 }
 
+// Main function; state machine to handle ros connection state
 void actuator_loop()
 {
   switch (state)
