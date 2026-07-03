@@ -28,6 +28,7 @@
 #define GRABBER_OPEN 2100
 
 // Define pins on Teensy
+// J1 = 8, J2 = 9, J3 = 10, J4 = 11, J5 = 12
 #define LED_PIN 13
 #define TORPEDO_PIN 8
 #define GRABBER_PIN 10
