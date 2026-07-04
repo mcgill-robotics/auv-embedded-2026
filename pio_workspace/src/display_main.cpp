@@ -263,6 +263,39 @@ void destroy_entities() {
   rclc_support_fini(&support);
 }
 
+void resetBuffers() {
+  // Thruster commands - force to neutral (1500us = stopped)
+  for (int i = 0; i < 8; i++) {
+    microseconds[i] = 1500;
+    Sthrusters[i] = 0;
+    thrusters_old[i] = -1;
+  }
+  thrusterStatus(Sthrusters);
+
+  // Battery voltages - back to unknown state
+  batt_voltage_1_new = 0.0;
+  batt_voltage_2_new = 0.0;
+  voltages_old[0] = -1;
+  voltages_old[1] = -1;
+
+  // Moving average buffers
+  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+    voltage_buffer1[i] = 0;
+    voltage_buffer2[i] = 0;
+  }
+  voltage_buffer_index1 = 0;
+  voltage_buffer_index2 = 0;
+
+  // Device statuses - unknown until re-reported
+  for (int i = 0; i < 7; i++) {
+    devices_new[i] = 0;
+    devices_old[i] = -1;
+  }
+
+  // Force display status text to reflect disconnect
+  status_new = "ROS2 Disconnected";
+}
+
 // ===== Button Structure =====
 struct Button {
   int x, y, width, height;
@@ -767,10 +800,24 @@ void display_loop() {
   // Handle touch input
   handleTouch();
   
-  // Read depth sensor (read() returns void, just call it)
+  // Read depth sensor
   sensor.read();
-  current_depth = sensor.depth();
-  current_temperature = sensor.temperature();
+  float raw_depth = sensor.depth();
+  float raw_temp = sensor.temperature();
+
+  // ===== Depth Validation (Mega Filter of Doom: 0.0m - 4.5m) =====
+  if (isnan(raw_depth) || isinf(raw_depth) || raw_depth < 0.0 || raw_depth > 4.5) {
+    current_depth = depth_old;   // reject bad reading, hold last good value
+  } else {
+    current_depth = raw_depth;
+  }
+
+  if (isnan(raw_temp) || isinf(raw_temp)) {
+    current_temperature = temp_old;
+  } else {
+    current_temperature = raw_temp;
+  }
+
   updateDepthAndTempDisplay();
   
   // Update other display elements
@@ -801,6 +848,7 @@ void display_loop() {
       break;
     case AGENT_DISCONNECTED:
       destroy_entities();
+      resetBuffers();
       state = WAITING_AGENT;
       break;
     default:
