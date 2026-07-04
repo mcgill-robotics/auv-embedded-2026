@@ -59,3 +59,34 @@ Because the timer period must be an integer number of milliseconds, some frequen
 ### Notes
 - The microROS executor must run at least as fast as the timer period to ensure callbacks are serviced on time.
 - Increasing the publish rate increases CPU load and I2C traffic; ensure the sensor and microcontroller can support the selected frequency.
+
+## Actuator Board
+
+### Hardware Connections
+
+Based on the pin mapping in the code, connect your servos to the following ports on the board:
+
+* **Torpedo Servo:** Connect to port **J1** (Teensy Pin 8)
+* **Grabber Servo:** Connect to port **J3** (Teensy Pin 10)
+
+---
+
+### ROS 2 Commands
+
+The board runs a micro-ROS node named `actuator_node` and listens to two topics. Both topics expect messages of type `std_msgs/msg/UInt8`.
+
+Publish the corresponding integer value to trigger the desired state:
+
+| Actuator | ROS 2 Topic | Value (`data`) | Action |
+| :--- | :--- | :--- | :--- |
+| **Torpedo** | `/actuators/torpedo` | `0` | Closed |
+| **Torpedo** | `/actuators/torpedo` | `1` | Shoot One |
+| **Torpedo** | `/actuators/torpedo` | `2` | Shoot Both |
+| **Grabber** | `/actuators/grabber` | `0` | Open |
+| **Grabber** | `/actuators/grabber` | `1` | Closed |
+
+### Example CLI Commands
+
+To test the actuators from your terminal, you can publish messages directly using the following commands:
+
+**Open the grabber:**
