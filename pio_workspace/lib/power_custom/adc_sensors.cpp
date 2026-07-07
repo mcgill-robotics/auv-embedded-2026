@@ -60,8 +60,8 @@ Will be -ve if voltageEnabled = false
 float* ADCSensors::senseVoltage() {
   if (voltageEnabled) {
     refreshVoltage();
-    voltageValues[0] = convertVoltage(computedADCVoltage[0]);
-    voltageValues[1] = convertVoltage(computedADCVoltage[1]);
+    voltageValues[0] = convertVoltage(computedADCVoltage[0], battery1);
+    voltageValues[1] = convertVoltage(computedADCVoltage[1], battery2);
   } else {
     voltageValues[0] = -1.0;
     voltageValues[1] = -1.0;
@@ -117,7 +117,7 @@ void ADCSensors::refreshCurrent() {
 }
 
 // Convert ADC values into meaningful real-life voltage values based on circuit components
-float ADCSensors::convertVoltage(float adcVoltage) {
+float ADCSensors::convertVoltage(float adcVoltage, uint8_t batteryNumber) {
   /* 
   1+R41/R42 = 3
   VBAT LOW: 12.8  | ADC INPUT: 0.181
@@ -127,9 +127,17 @@ float ADCSensors::convertVoltage(float adcVoltage) {
 
   // Equation to calculate voltage from serial 1 with correct resistors
   float uncalibratedVoltage = (adcVoltage * 2) * (16.8 - 12.8) / (2.586 - 0.180) + 12.5;
+  float calibratedVoltage = 0;
   
+if (batteryNumber == battery1) {
   // Modification to equation to account for incorrect resistors; measured
-  float calibratedVoltage = 1.66846*uncalibratedVoltage - 7.01721;
+  calibratedVoltage = 1.66846*uncalibratedVoltage - 7.01721;
+}
+else if (batteryNumber == battery2){
+  // Modification to equation to account for incorrect resistors; measured
+  calibratedVoltage = 1.49247*uncalibratedVoltage - 6.24136;
+}
+
   return calibratedVoltage;
 }
 

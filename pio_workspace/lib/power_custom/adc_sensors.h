@@ -18,6 +18,13 @@ HEADER FILE FOR ADC_SENSOR FOR CURRENT & VOLTAGE SENSING
 
 class ADCSensors {
   public:
+
+  // Battery numbering for ADC input calculations for serial 2
+    enum Batteries {
+      battery1 = 0,
+      battery2 = 1
+    };
+
     // Constructor for ADCSensor class
     ADCSensors();
 
@@ -55,7 +62,7 @@ class ADCSensors {
     void refreshCurrent();
 
     // Converts computed values to real-world values and stores into arrays
-    float convertVoltage(float adcVoltage);
+    float convertVoltage(float adcVoltage, uint8_t batteryNumber);
     float convertCurrent(float adcCurrent);
 };
 
