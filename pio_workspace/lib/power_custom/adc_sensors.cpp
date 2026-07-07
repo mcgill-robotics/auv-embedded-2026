@@ -120,11 +120,17 @@ void ADCSensors::refreshCurrent() {
 float ADCSensors::convertVoltage(float adcVoltage) {
   /* 
   1+R41/R42 = 3
-  VBAT LOW: 12.8  | ADC INPUT: 0.18
+  VBAT LOW: 12.8  | ADC INPUT: 0.181
   VBAT NOM: 14.8  | ADC INPUT: 1.384
   VBAT HIGH: 16.8 | ADC INPUT: 2.586
   */
-  return (adcVoltage * 2) * (16.8 - 12.8) / (2.586 - 0.180) + 12.5;
+
+  // Equation to calculate voltage from serial 1 with correct resistors
+  float uncalibratedVoltage = (adcVoltage * 2) * (16.8 - 12.8) / (2.586 - 0.180) + 12.5;
+  
+  // Modification to equation to account for incorrect resistors; measured
+  float calibratedVoltage = 1.66846*uncalibratedVoltage - 7.01721;
+  return calibratedVoltage;
 }
 
 // Convert ADC values into meaningful real-life current values based on circuit components
