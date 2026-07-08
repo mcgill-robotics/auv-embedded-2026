@@ -30,8 +30,8 @@
 // Define pins on Teensy
 // J1 = 8, J2 = 9, J3 = 10, J4 = 11, J5 = 12
 #define LED_PIN 13
-#define TORPEDO_PIN 8
-#define GRABBER_PIN 10
+#define TORPEDO_PIN 10
+#define GRABBER_PIN 11
 
 // Macro for non-blocking timing in the state machine
 #define EXECUTE_EVERY_N_MS(MS, X)      \
@@ -101,9 +101,19 @@ void connectUSB()
   USB1_USBCMD = 1;
 }
 
+// Function to convert between ROS2 grabber positions and actual angles
+int grabberMsgToAngle(uint8_t grabberPositionMsg) {
+
+  // ((grabberMaxAngle - grabberMinAngle)/(maxMsg - minMsg))(inputMsg) + grabberMinAngle;
+  int grabberAngle = (int)(float)(((GRABBER_OPEN - GRABBER_CLOSED)/(255.0f))*(grabberPositionMsg) + GRABBER_CLOSED);
+  
+  return grabberAngle;
+}
+
 // Function to move torpedo servo to a specific numeric position
-void sweepTorpedo(int targetPosition, int stepDelay = 1)
+void sweepTorpedo(int targetPosition)
 {
+  int stepDelay = 1;
   int currentPosition = torpedoServo.readMicroseconds();
   int step = (targetPosition > currentPosition) ? 50 : -50;
 
@@ -115,38 +125,27 @@ void sweepTorpedo(int targetPosition, int stepDelay = 1)
   torpedoServo.writeMicroseconds(targetPosition);
 }
 
-// Function to move grabber servo to a specific numeric position
-void sweepGrabber(int targetPosition, int stepDelay = 2)
+// Function to move grabber servo to a specified angle
+void sweepGrabber(uint8_t targetPositionMsg)
 {
-  int currentPosition = grabberServo.readMicroseconds();
-  int step = (targetPosition > currentPosition) ? 20 : -20;
+  // can be tuned
+  int stepDelay = 2;
 
-  for (int us = currentPosition; (step > 0) ? (us <= targetPosition) : (us >= targetPosition); us += step)
+  // convert input message from ros (0-255) into a scale between open and closed
+  int targetPositionAngle = grabberMsgToAngle(targetPositionMsg);
+
+  int currentPosition = grabberServo.readMicroseconds();
+
+  int step = (targetPositionAngle > currentPosition) ? 20 : -20;
+
+  for (int us = currentPosition; (step > 0) ? (us <= targetPositionAngle) : (us >= targetPositionAngle); us += step)
   {
     grabberServo.writeMicroseconds(us);
     delay(stepDelay);
   }
-  grabberServo.writeMicroseconds(targetPosition);
+  grabberServo.writeMicroseconds(targetPositionAngle);
 }
 
-// Function to move torpedo servo to one of 3 pre-determined command positions
-void moveTorpedo(int position, int torpedoDelay = 1000)
-{
-  sweepTorpedo(position);
-  delay(torpedoDelay);
-}
-
-// Function to move grabber servo to one of 2 pre-determined command positions
-void moveGrabber(int position, int grabberDelay = 5000)
-{
-  unsigned long holdStart = millis();
-  while (millis() - holdStart < (unsigned long)grabberDelay)
-  {
-    sweepGrabber(position);
-    delay(15);
-  }
-  grabberServo.writeMicroseconds(position);
-}
 
 // Function to parse torpedo msg and move torpedo servo accordingly
 void torpedo_callback(const void *msgin)
@@ -157,13 +156,13 @@ void torpedo_callback(const void *msgin)
   switch (torpedo_command)
   {
   case closed:
-    moveTorpedo(CLOSED);
+    sweepTorpedo(CLOSED);
     break;
   case shoot_one:
-    moveTorpedo(OPEN_ONE);
+    sweepTorpedo(OPEN_ONE);
     break;
   case shoot_two:
-    moveTorpedo(OPEN_BOTH);
+    sweepTorpedo(OPEN_BOTH);
     break;
   default:
     break;
@@ -174,19 +173,8 @@ void torpedo_callback(const void *msgin)
 void grabber_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
-  grabber_command = (grabber_positions)msg->data;
 
-  switch (grabber_command)
-  {
-  case grabber_open:
-    moveGrabber(GRABBER_OPEN);
-    break;
-  case grabber_closed:
-    moveGrabber(GRABBER_CLOSED);
-    break;
-  default:
-    break;
-  }
+  sweepGrabber(msg->data);
 }
 
 // Setup function
