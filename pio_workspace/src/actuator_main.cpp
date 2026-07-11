@@ -191,7 +191,7 @@ void actuator_setup()
   // Attach and initialize grabber servo
   grabberServo.attach(GRABBER_PIN);
   delay(100);
-  grabberServo.writeMicroseconds(GRABBER_CLOSED);
+  grabberServo.writeMicroseconds(GRABBER_OPEN);
   delay(500);
 
   // Attach and initialize torpedo servo
