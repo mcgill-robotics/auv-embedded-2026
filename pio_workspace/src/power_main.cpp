@@ -27,7 +27,9 @@
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
 
-#define LOW_VOLTAGE_THRESHOLD 13.5
+#define BATTERY_1_LOW_VOLTAGE_THRESHOLD 13.85
+#define BATTERY_2_LOW_VOLTAGE_THRESHOLD 13.5
+#define LOW_VOLTAGE_CONFIRMATION_SAMPLES 3
 
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
@@ -52,7 +54,11 @@ std_msgs__msg__Float32 power_teensy_temperature_msg;
 rcl_publisher_t power_kill_publisher;
 std_msgs__msg__Bool power_kill_msg;
 
+rcl_publisher_t power_thrusters_applied_microseconds_publisher;
+std_msgs__msg__Int16MultiArray power_thrusters_applied_microseconds_msg;
+
 bool kill_latched = false;
+uint8_t low_voltage_sample_count = 0;
 float last_voltage_data[2] = { -2.0, -2.0 };
 
 rclc_executor_t executor;
@@ -87,9 +93,21 @@ enum states {
   AGENT_DISCONNECTED
 } state;
 
+void applyThrusterCommand(const int16_t command[8]) {
+  updateThrusters(command);
+
+  for (int i = 0; i < 8; i++) {
+    power_thrusters_applied_microseconds_msg.data.data[i] = command[i];
+  }
+}
+
 void propulsion_microseconds_callback(const void * msgin)
 {  
   const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
+
+  if (kill_latched || msg->data.size < 8) {
+    return;
+  }
 
   for (int i = 0; i < 8; i++) {
     microseconds[i] = msg->data.data[i];
@@ -104,6 +122,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_teensy_temperature_publisher, &power_teensy_temperature_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_kill_publisher, &power_kill_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&power_thrusters_applied_microseconds_publisher, &power_thrusters_applied_microseconds_msg, NULL));
   }
 }
 
@@ -150,6 +169,12 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
     "/power/kill"));
 
+  RCCHECK(rclc_publisher_init_default(
+    &power_thrusters_applied_microseconds_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+    "/power/thrusters/applied_microseconds"));
+
   const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
     &timer,
@@ -188,6 +213,7 @@ void destroy_entities() {
   rcl_publisher_fini(&power_board_temperature_publisher, &node);
   rcl_publisher_fini(&power_teensy_temperature_publisher, &node);
   rcl_publisher_fini(&power_kill_publisher, &node);
+  rcl_publisher_fini(&power_thrusters_applied_microseconds_publisher, &node);
   rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
@@ -216,22 +242,26 @@ void senseData() {
 }
 
 void checkLowVoltage() {
-  bool low_voltage_detected = false;
+  bool battery_1_low = last_voltage_data[0] > 0.0 &&
+                       last_voltage_data[0] <= BATTERY_1_LOW_VOLTAGE_THRESHOLD;
+  bool battery_2_low = last_voltage_data[1] > 0.0 &&
+                       last_voltage_data[1] <= BATTERY_2_LOW_VOLTAGE_THRESHOLD;
+  bool both_batteries_low = battery_1_low && battery_2_low;
 
-  for (int i = 0; i < 2; i++) {
-    if (last_voltage_data[i] > 0.0 && last_voltage_data[i] < LOW_VOLTAGE_THRESHOLD) {
-      low_voltage_detected = true;
-    }
+  if (both_batteries_low && low_voltage_sample_count < LOW_VOLTAGE_CONFIRMATION_SAMPLES) {
+    low_voltage_sample_count++;
+  } else if (!both_batteries_low) {
+    low_voltage_sample_count = 0;
   }
 
-  if (low_voltage_detected) {
+  if (low_voltage_sample_count >= LOW_VOLTAGE_CONFIRMATION_SAMPLES) {
     kill_latched = true;
   }
 
   power_kill_msg.data = kill_latched;
 
   if (kill_latched) {
-    updateThrusters(offCommand);
+    applyThrusterCommand(offCommand);
     for (int i = 0; i < 8; i++) {
       microseconds[i] = 1500;
     }
@@ -256,6 +286,13 @@ void power_setup() {
   propulsion_microseconds_msg.data.data = (int16_t*)malloc(propulsion_microseconds_msg.data.capacity * sizeof(int16_t));
   for (int i = 0; i < 8; i++) {
     propulsion_microseconds_msg.data.data[i] = 0;
+  }
+
+  power_thrusters_applied_microseconds_msg.data.size = 8;
+  power_thrusters_applied_microseconds_msg.data.capacity = 8;
+  power_thrusters_applied_microseconds_msg.data.data = (int16_t*)malloc(power_thrusters_applied_microseconds_msg.data.capacity * sizeof(int16_t));
+  for (int i = 0; i < 8; i++) {
+    power_thrusters_applied_microseconds_msg.data.data[i] = 1500;
   }
 
   power_batteries_voltage_msg.data.size = 2;
@@ -299,11 +336,11 @@ void power_loop() {
 
   switch (state) {
     case WAITING_AGENT:
-      updateThrusters(offCommand);
+      applyThrusterCommand(offCommand);
       EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
       break;
     case AGENT_AVAILABLE:
-      updateThrusters(offCommand);
+      applyThrusterCommand(offCommand);
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
       if (state == WAITING_AGENT) {
         destroy_entities();
@@ -311,11 +348,16 @@ void power_loop() {
       break;
     case AGENT_CONNECTED:
       EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-      if (state == AGENT_CONNECTED && !kill_latched) {
+      if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-        updateThrusters(microseconds);
+
+        if (kill_latched) {
+          applyThrusterCommand(offCommand);
+        } else {
+          applyThrusterCommand(microseconds);
+        }
       } else {
-        updateThrusters(offCommand);
+        applyThrusterCommand(offCommand);
       }
       break;
     case AGENT_DISCONNECTED:
