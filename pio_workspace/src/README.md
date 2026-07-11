@@ -75,15 +75,15 @@ Based on the pin mapping in the code, connect your servos to the following ports
 
 The board runs a micro-ROS node named `actuator_node` and listens to two topics. Both topics expect messages of type `std_msgs/msg/UInt8`.
 
-Publish the corresponding integer value to trigger the desired state:
+Publish the corresponding integer value to trigger the desired state. Values between 0 and 255 on the grabber correspond to intermediete positions between closed and open, respectivly.
 
 | Actuator | ROS 2 Topic | Value (`data`) | Action |
 | :--- | :--- | :--- | :--- |
-| **Torpedo** | `/actuators/torpedo` | `0` | Closed |
-| **Torpedo** | `/actuators/torpedo` | `1` | Shoot One |
-| **Torpedo** | `/actuators/torpedo` | `2` | Shoot Both |
-| **Grabber** | `/actuators/grabber` | `0` | Open |
-| **Grabber** | `/actuators/grabber` | `1` | Closed |
+| **Torpedo** | `/actuators/torpedo` |  `0`  | Closed     |
+| **Torpedo** | `/actuators/torpedo` |  `1`  | Shoot One  |
+| **Torpedo** | `/actuators/torpedo` |  `2`  | Shoot Both |
+| **Grabber** | `/actuators/grabber` | `255` | Open       |
+| **Grabber** | `/actuators/grabber` |  `0`  | Closed     |
 
 ### Example CLI Commands
 
