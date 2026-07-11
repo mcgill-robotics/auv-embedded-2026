@@ -20,12 +20,14 @@
 #include <std_msgs/msg/int16_multi_array.h>
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/float32_multi_array.h>
+#include <std_msgs/msg/bool.h>
 
 #define LED_PIN 13
 
-
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
+
+#define LOW_VOLTAGE_THRESHOLD 13.5
 
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
@@ -46,6 +48,12 @@ std_msgs__msg__Float32 power_board_temperature_msg;
 
 rcl_publisher_t power_teensy_temperature_publisher;
 std_msgs__msg__Float32 power_teensy_temperature_msg;
+
+rcl_publisher_t power_kill_publisher;
+std_msgs__msg__Bool power_kill_msg;
+
+bool kill_latched = false;
+float last_voltage_data[2] = { -2.0, -2.0 };
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -95,16 +103,15 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     RCSOFTCHECK(rcl_publish(&power_thrusters_current_publisher, &power_thrusters_current_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_teensy_temperature_publisher, &power_teensy_temperature_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&power_kill_publisher, &power_kill_msg, NULL));
   }
 }
 
 bool create_entities() {
   allocator = rcl_get_default_allocator();
 
-  // create init_options
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
-  // create node
   RCCHECK(rclc_node_init_default(&node, "power_node", "", &support));
 
   RCCHECK(rclc_subscription_init_default(
@@ -113,7 +120,6 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
     "/propulsion/microseconds"));
 
-  /// create publisher
   RCCHECK(rclc_publisher_init_default(
     &power_batteries_voltage_publisher,
     &node,
@@ -138,7 +144,12 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
     "/power/teensy/temperature"));
 
-  // create timer,
+  RCCHECK(rclc_publisher_init_default(
+    &power_kill_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+    "/power/kill"));
+
   const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
     &timer,
@@ -146,12 +157,10 @@ bool create_entities() {
     RCL_MS_TO_NS(timer_timeout),
     timer_callback));
 
-  // create executor
   executor = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator)); // number arbitrarily set, idk what is the correct on yet, trial and error later on
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator));
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
   RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber, &propulsion_microseconds_msg, &propulsion_microseconds_callback, ON_NEW_DATA));
-
 
   return true;
 }
@@ -167,7 +176,6 @@ void destroy_entities() {
   disconnectUSB();
   delay(25);
   
-  // Clear out the global array so old commands aren't cached
   for(int i = 0; i < 8; i++) {
     microseconds[i] = 1500;
   }
@@ -179,6 +187,7 @@ void destroy_entities() {
   rcl_publisher_fini(&power_thrusters_current_publisher, &node);
   rcl_publisher_fini(&power_board_temperature_publisher, &node);
   rcl_publisher_fini(&power_teensy_temperature_publisher, &node);
+  rcl_publisher_fini(&power_kill_publisher, &node);
   rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
@@ -202,6 +211,30 @@ void senseData() {
   float* voltage_data = adcSensors.senseVoltage();
   for (size_t i = 0; i < 2; i++) {
       power_batteries_voltage_msg.data.data[i] = voltage_data[i];
+      last_voltage_data[i] = voltage_data[i];
+  }
+}
+
+void checkLowVoltage() {
+  bool low_voltage_detected = false;
+
+  for (int i = 0; i < 2; i++) {
+    if (last_voltage_data[i] > 0.0 && last_voltage_data[i] < LOW_VOLTAGE_THRESHOLD) {
+      low_voltage_detected = true;
+    }
+  }
+
+  if (low_voltage_detected) {
+    kill_latched = true;
+  }
+
+  power_kill_msg.data = kill_latched;
+
+  if (kill_latched) {
+    updateThrusters(offCommand);
+    for (int i = 0; i < 8; i++) {
+      microseconds[i] = 1500;
+    }
   }
 }
 
@@ -214,12 +247,9 @@ void power_setup() {
   adcSensors.begin(ENABLE_VOLTAGE_SENSE, ENABLE_CURRENT_SENSE, &Wire1);
   temperatureSensor.begin();
 
-  // Configure serial transport
   Serial.begin(115200);
   set_microros_transports();
   delay(2000);
-
-  // allocates correct message sizes and initialzies to 0, required or crashes
 
   propulsion_microseconds_msg.data.size = 8;
   propulsion_microseconds_msg.data.capacity = 8;
@@ -246,7 +276,7 @@ void power_setup() {
 
   power_teensy_temperature_msg.data = 0.0;
 
-  //allocates thrusters to 1500 in case of reset and allocates -2.0 to sensing to go under the -1.0 of unintiailized from drivers
+  power_kill_msg.data = false;
 
   for (int i = 0; i < 8; i++) {
     propulsion_microseconds_msg.data.data[i] = 1500;
@@ -260,12 +290,12 @@ void power_setup() {
   power_board_temperature_msg.data = -2.0;
   power_teensy_temperature_msg.data = -2.0;
 
-  // first state
   state = WAITING_AGENT;
 }
 
 void power_loop() {
   senseData();
+  checkLowVoltage();
 
   switch (state) {
     case WAITING_AGENT:
@@ -281,7 +311,7 @@ void power_loop() {
       break;
     case AGENT_CONNECTED:
       EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-      if (state == AGENT_CONNECTED) {
+      if (state == AGENT_CONNECTED && !kill_latched) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
         updateThrusters(microseconds);
       } else {
@@ -296,7 +326,7 @@ void power_loop() {
       break;
   }
 
-  if (state == AGENT_CONNECTED) {
+  if (state == AGENT_CONNECTED && !kill_latched) {
     digitalWrite(LED_PIN, 1);
   } else {
     digitalWrite(LED_PIN, 0);
