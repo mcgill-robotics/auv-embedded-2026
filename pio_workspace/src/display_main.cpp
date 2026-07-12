@@ -78,8 +78,12 @@ float voltages_new[] = { -1, -1 };
 uint16_t batt_colours[] = { WHITE, WHITE };
 float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
 int voltage_buffer_index1 = 0;
+float voltage_buffer_sum1 = 0.0;
+bool voltage_buffer_initialized1 = false;
 float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
 int voltage_buffer_index2 = 0;
+float voltage_buffer_sum2 = 0.0;
+bool voltage_buffer_initialized2 = false;
 
 String status_new = "ROS2 Display Ready";
 String status_old = "";
@@ -285,6 +289,10 @@ void resetBuffers() {
   }
   voltage_buffer_index1 = 0;
   voltage_buffer_index2 = 0;
+  voltage_buffer_sum1 = 0.0;
+  voltage_buffer_sum2 = 0.0;
+  voltage_buffer_initialized1 = false;
+  voltage_buffer_initialized2 = false;
 
   // Device statuses - unknown until re-reported
   for (int i = 0; i < 7; i++) {
@@ -409,21 +417,47 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
 
 // ===== Moving Average =====
 float movingAverage1(float newValue) {
-  static float sum = 0;
-  sum -= voltage_buffer1[voltage_buffer_index1];
+  if (!voltage_buffer_initialized1) {
+    if (newValue <= 0.0) {
+      return newValue;
+    }
+
+    for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+      voltage_buffer1[i] = newValue;
+    }
+    voltage_buffer_sum1 = newValue * MOVING_AVERAGE_SAMPLES;
+    voltage_buffer_index1 = 0;
+    voltage_buffer_initialized1 = true;
+    return newValue;
+  }
+
+  voltage_buffer_sum1 -= voltage_buffer1[voltage_buffer_index1];
   voltage_buffer1[voltage_buffer_index1] = newValue;
-  sum += newValue;
+  voltage_buffer_sum1 += newValue;
   voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
-  return sum / MOVING_AVERAGE_SAMPLES;
+  return voltage_buffer_sum1 / MOVING_AVERAGE_SAMPLES;
 }
 
 float movingAverage2(float newValue) {
-  static float sum = 0;
-  sum -= voltage_buffer2[voltage_buffer_index2];
+  if (!voltage_buffer_initialized2) {
+    if (newValue <= 0.0) {
+      return newValue;
+    }
+
+    for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+      voltage_buffer2[i] = newValue;
+    }
+    voltage_buffer_sum2 = newValue * MOVING_AVERAGE_SAMPLES;
+    voltage_buffer_index2 = 0;
+    voltage_buffer_initialized2 = true;
+    return newValue;
+  }
+
+  voltage_buffer_sum2 -= voltage_buffer2[voltage_buffer_index2];
   voltage_buffer2[voltage_buffer_index2] = newValue;
-  sum += newValue;
+  voltage_buffer_sum2 += newValue;
   voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
-  return sum / MOVING_AVERAGE_SAMPLES;
+  return voltage_buffer_sum2 / MOVING_AVERAGE_SAMPLES;
 }
 
 void batt1(float V1) {
@@ -711,10 +745,6 @@ void handleTouch() {
         if (x >= 8 && x <= 68 && y >= 10 && y <= 40) {
           isInDryTestMode = false;
           initMainPage();
-          batt_voltage_1_new = 0.0;
-          batt_voltage_2_new = 0.0;
-          batt1(batt_voltage_1_new);
-          batt2(batt_voltage_2_new);
           tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
         } else {
           for (int i = 0; i < 8; i++) {
