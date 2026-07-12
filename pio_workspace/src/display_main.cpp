@@ -112,9 +112,6 @@ float temp_old = -999.0;
 rcl_publisher_t sensors_depth_publisher;
 std_msgs__msg__Float64 sensors_depth_msg;
 
-rcl_publisher_t sensors_temperature_publisher;
-std_msgs__msg__Float64 sensors_temperature_msg;
-
 // Subscribers
 rcl_subscription_t propulsion_microseconds_subscriber;
 std_msgs__msg__Float32MultiArray propulsion_microseconds_msg;
@@ -178,16 +175,12 @@ void device_status_callback(const void * msgin) {
   }
 }
 
-// ===== Timer Callback (Publish depth and temp - just publishes already-read values) =====
+// ===== Timer Callback (Publish the already-read depth value) =====
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    // Publish the already-read values (read in display_loop)
     sensors_depth_msg.data = current_depth;
     RCSOFTCHECK(rcl_publish(&sensors_depth_publisher, &sensors_depth_msg, NULL));
-    
-    sensors_temperature_msg.data = current_temperature;
-    RCSOFTCHECK(rcl_publish(&sensors_temperature_publisher, &sensors_temperature_msg, NULL));
   }
 }
 
@@ -205,12 +198,6 @@ bool create_entities() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64),
     "/sensors/depth/z"));  // Team's topic name - keep as is
   
-  RCCHECK(rclc_publisher_init_default(
-    &sensors_temperature_publisher,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float64),
-    "/sensors/temperature"));  // PLACEHOLDER - update with actual team topic name
-
   // Create subscribers
   RCCHECK(rclc_subscription_init_default(
     &propulsion_microseconds_subscriber,
@@ -257,7 +244,6 @@ void destroy_entities() {
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
   rcl_publisher_fini(&sensors_depth_publisher, &node);
-  rcl_publisher_fini(&sensors_temperature_publisher, &node);
   rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
   rcl_subscription_fini(&battery_voltage_subscriber, &node);
   rcl_subscription_fini(&device_status_subscriber, &node);
@@ -813,7 +799,6 @@ void display_setup() {
   device_status_msg.data.data = (float*)malloc(device_status_msg.data.capacity * sizeof(float));
   
   sensors_depth_msg.data = 0.0;
-  sensors_temperature_msg.data = 0.0;
 
   // Initialize micro-ROS
   set_microros_transports();
