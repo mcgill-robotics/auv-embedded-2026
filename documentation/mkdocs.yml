@@ -8,12 +8,17 @@ nav:
         - version 1.1: design/v1.1/change_log.md
     - Design:
         - Signal chain design: design/signal-chain.md
+        - Power components : design/power.md
+        - Analog frontend : design/afe.md
 
 theme: readthedocs
 
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 extra_javascript:
   - javascripts/mathjax.js

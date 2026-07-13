@@ -226,7 +226,28 @@
     "equivalence_files": []
   },
   "erc": {
-    "erc_exclusions": [],
+    "erc_exclusions": [
+      [
+        "pin_to_pin|1092200|1231900|02d62baf-7cbb-4ae4-a4c9-0a91979ed0f9|a68d3c1d-75ba-40d2-a23c-55e8a0565eb4|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d",
+        "This is fine ; they are just the same output pins twice"
+      ],
+      [
+        "pin_to_pin|1435100|1511300|e42a9dc3-b15e-4348-8ce8-04e6205b9750|0ce71ebf-7307-485d-a616-b4e79a6174a6|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d",
+        "This is fine ; they are just the same output pins twice"
+      ],
+      [
+        "pin_to_pin|1435100|1536700|0ce71ebf-7307-485d-a616-b4e79a6174a6|c22558c0-82d4-4397-8051-dcf2acee4f07|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d",
+        "This is fine ; they are just the same output pins twice"
+      ],
+      [
+        "pin_to_pin|1943100|1231900|1c82e2d1-1c7c-4f01-820b-c0e67a738c96|c54540c7-9fc1-47bf-aecf-1d69c04ad145|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d",
+        "This is fine ; they are just the same output pins twice"
+      ],
+      [
+        "pin_to_pin|584200|1511300|28d40742-2dc0-4cb6-9657-6256f0fe8a93|c22558c0-82d4-4397-8051-dcf2acee4f07|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d|/af124310-bb30-42bd-a3e5-ceab7bdec90d",
+        "This is fine ; they are just the same output pins twice"
+      ]
+    ],
     "meta": {
       "version": 0
     },
