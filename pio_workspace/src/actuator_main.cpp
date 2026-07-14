@@ -18,6 +18,10 @@
 // std msg type libraries
 #include <std_msgs/msg/u_int8.h>
 
+// Error checking macros
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.println("[ERROR] RCL check failed"); return false;}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.println("[ERROR] RCL soft check failed");}}
+
 // Define torpedo Positions
 #define OPEN_ONE 1065
 #define CLOSED 1450
@@ -238,44 +242,28 @@ bool create_entities()
 {
   allocator = rcl_get_default_allocator();
 
-  rcl_ret_t rc = rclc_support_init(&support, 0, NULL, &allocator);
-  if (rc != RCL_RET_OK)
-    return false;
-
-  rc = rclc_node_init_default(&node, "actuator_node", "", &support);
-  if (rc != RCL_RET_OK)
-    return false;
+  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+  RCCHECK(rclc_node_init_default(&node, "actuator_node", "", &support));
 
   // Torpedo subscriber
-  rc = rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_default(
       &torpedo_subscriber,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
-      "/actuators/torpedo");
-  if (rc != RCL_RET_OK)
-    return false;
+      "/actuators/torpedo"));
 
   // Grabber subscriber
-  rc = rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_default(
       &grabber_subscriber,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
-      "/actuators/grabber");
-  if (rc != RCL_RET_OK)
-    return false;
+      "/actuators/grabber"));
 
-  // Executor needs 2 handles now (one per subscriber)
-  rc = rclc_executor_init(&executor, &support.context, 2, &allocator);
-  if (rc != RCL_RET_OK)
-    return false;
+  // Executor with increased buffer: 100 handles for proper memory allocation
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator));
 
-  rc = rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA);
-  if (rc != RCL_RET_OK)
-    return false;
-
-  rc = rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA);
-  if (rc != RCL_RET_OK)
-    return false;
+  RCCHECK(rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA));
 
   return true;
 }
