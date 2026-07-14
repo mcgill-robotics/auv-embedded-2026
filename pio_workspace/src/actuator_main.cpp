@@ -152,19 +152,32 @@ void torpedo_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
   torpedo_command = (torpedo_positions)msg->data;
+  Serial.print("[TORPEDO_CALLBACK] Received command: ");
+  Serial.println((int)torpedo_command);
+  int cur_pwm = torpedoServo.readMicroseconds();
+  Serial.print("[TORPEDO_CALLBACK] Current PWM: ");
+  Serial.println(cur_pwm);
 
   switch (torpedo_command)
   {
   case closed:
+    Serial.println("[TORPEDO] Sweeping to CLOSED");
     sweepTorpedo(CLOSED);
+    Serial.println("[TORPEDO] Sweep complete");
     break;
   case shoot_one:
+    Serial.println("[TORPEDO] Sweeping to SHOOT_ONE");
     sweepTorpedo(OPEN_ONE);
+    Serial.println("[TORPEDO] Sweep complete");
     break;
   case shoot_two:
+    Serial.println("[TORPEDO] Sweeping to SHOOT_TWO");
     sweepTorpedo(OPEN_BOTH);
+    Serial.println("[TORPEDO] Sweep complete");
     break;
   default:
+    Serial.print("[TORPEDO] Unknown command: ");
+    Serial.println((int)torpedo_command);
     break;
   }
 }
@@ -173,8 +186,20 @@ void torpedo_callback(const void *msgin)
 void grabber_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
+  uint8_t in = msg->data;
+  int target_angle = grabberMsgToAngle(in);
+  int cur_pwm = grabberServo.readMicroseconds();
 
-  sweepGrabber(msg->data);
+  Serial.print("[GRABBER_CALLBACK] Received msg: ");
+  Serial.println((int)in);
+  Serial.print("[GRABBER_CALLBACK] Current PWM: ");
+  Serial.println(cur_pwm);
+  Serial.print("[GRABBER_CALLBACK] Target PWM: ");
+  Serial.println(target_angle);
+
+  Serial.println("[GRABBER] Sweeping to target");
+  sweepGrabber(in);
+  Serial.println("[GRABBER] Sweep complete");
 }
 
 // Setup function
