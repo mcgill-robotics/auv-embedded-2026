@@ -272,6 +272,7 @@ bool create_entities()
 void destroy_entities()
 {
   disconnectUSB();
+  delay(25);
 
   rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
   (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
@@ -282,6 +283,7 @@ void destroy_entities()
   rclc_executor_fini(&executor);
   rclc_support_fini(&support);
 
+  delay(25);
   connectUSB();
 }
 
