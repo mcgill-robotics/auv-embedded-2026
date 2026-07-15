@@ -207,21 +207,21 @@ void actuator_setup()
   // Set transport to serial
   Serial.begin(115200);
   set_microros_transports();
-  delay(500);
+  // delay(500);
 
   // Attach and initialize grabber servo
   grabberServo.attach(GRABBER_PIN);
-  delay(100);
+  // delay(100);
   grabberServo.writeMicroseconds(GRABBER_OPEN);
   target_grabber_us = GRABBER_OPEN;
-  delay(500);
+  // delay(500);
 
   // Attach and initialize torpedo servo
   torpedoServo.attach(TORPEDO_PIN);
-  delay(100);
+  // delay(100);
   torpedoServo.writeMicroseconds(CLOSED);
   target_torpedo_us = CLOSED;
-  delay(500);
+  // delay(500);
 
   // Set initial msgs
   torpedo_msg.data = closed;
@@ -281,10 +281,10 @@ void destroy_entities()
   rclc_support_fini(&support);
 
   // Toggle USB after entities are fully freed
-  disconnectUSB();
-  delay(100);
-  connectUSB();
-  delay(100);
+  // disconnectUSB();
+  // delay(100);
+  // connectUSB();
+  // delay(100);
 }
 
 // Main function; state machine to handle ros connection state
