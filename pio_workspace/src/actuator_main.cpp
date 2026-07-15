@@ -366,7 +366,16 @@ void actuator_loop()
 
   if (state == AGENT_CONNECTED)
   {
-    EXECUTE_EVERY_N_MS(3000, digitalWrite(LED_PIN, !digitalRead(LED_PIN)));
+    EXECUTE_EVERY_N_MS(3000, {
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+      char buf[128];
+      int torpedo_cur = torpedoServo.readMicroseconds();
+      int grabber_cur = grabberServo.readMicroseconds();
+      snprintf(buf, sizeof(buf), "ACTUATOR TICK [%lu ms] torpedo cur: %d target: %d | grabber cur: %d target: %d",
+               (unsigned long)uxr_millis(), torpedo_cur, target_torpedo_us, grabber_cur, target_grabber_us);
+      rosidl_runtime_c__String__assign(&log_msg.data, buf);
+      RCSOFTCHECK(rcl_publish(&log_publisher, &log_msg, NULL));
+    });
   }
   else
   {
