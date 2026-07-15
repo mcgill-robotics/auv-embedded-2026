@@ -18,6 +18,11 @@
 // std msg type libraries
 #include <std_msgs/msg/u_int8.h>
 
+// Logging publisher
+#include <std_msgs/msg/string.h>
+#include <rosidl_runtime_c/string_functions.h>
+// Error checking macros
+
 // Define torpedo Positions
 #define OPEN_ONE 1065
 #define CLOSED 1450
@@ -76,6 +81,9 @@ rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
+// log publisher
+rcl_publisher_t log_publisher;
+std_msgs__msg__String log_msg;
 
 // Torpedo position commands
 enum torpedo_positions
@@ -178,12 +186,33 @@ void torpedo_callback(const void *msgin)
   {
   case closed:
     target_torpedo_us = CLOSED;
+    {
+      char buf[128];
+      int cur = torpedoServo.readMicroseconds();
+      snprintf(buf, sizeof(buf), "TORPEDO callback cur:%d target:%d", cur, target_torpedo_us);
+      rosidl_runtime_c__String__assign(&log_msg.data, buf);
+      RCSOFTCHECK(rcl_publish(&log_publisher, &log_msg, NULL));
+    }
     break;
   case shoot_one:
     target_torpedo_us = OPEN_ONE;
+    {
+      char buf[128];
+      int cur = torpedoServo.readMicroseconds();
+      snprintf(buf, sizeof(buf), "TORPEDO callback cur:%d target:%d", cur, target_torpedo_us);
+      rosidl_runtime_c__String__assign(&log_msg.data, buf);
+      RCSOFTCHECK(rcl_publish(&log_publisher, &log_msg, NULL));
+    }
     break;
   case shoot_two:
     target_torpedo_us = OPEN_BOTH;
+    {
+      char buf[128];
+      int cur = torpedoServo.readMicroseconds();
+      snprintf(buf, sizeof(buf), "TORPEDO callback cur:%d target:%d", cur, target_torpedo_us);
+      rosidl_runtime_c__String__assign(&log_msg.data, buf);
+      RCSOFTCHECK(rcl_publish(&log_publisher, &log_msg, NULL));
+    }
     break;
   default:
     break;
@@ -193,16 +222,23 @@ void torpedo_callback(const void *msgin)
 // Function to parse grabber msg and set target position accordingly
 void grabber_callback(const void *msgin)
 {
-  digitalWrite(LED_PIN, HIGH);
-  delay(100);
-  digitalWrite(LED_PIN, LOW);
+  const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
+  uint8_t in = msg->data;
+  int target = grabberMsgToAngle(in);
+  target_grabber_us = target;
+  // publish log
+  char buf[128];
+  int cur = grabberServo.readMicroseconds();
+  snprintf(buf, sizeof(buf), "GRABBER callback cur:%d target:%d", cur, target_grabber_us);
+  rosidl_runtime_c__String__assign(&log_msg.data, buf);
+  RCSOFTCHECK(rcl_publish(&log_publisher, &log_msg, NULL));
 }
 
 // Setup function
 void actuator_setup()
 {
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+  digitalWrite(LED_PIN, HIGH);
 
   // Set transport to serial
   Serial.begin(115200);
@@ -264,6 +300,10 @@ bool create_entities()
   RCCHECK(rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA));
 
+  // Initialize log publisher
+  std_msgs__msg__String__init(&log_msg);
+  RCCHECK(rclc_publisher_init_default(&log_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String), "/actuators/log"));
+
   return true;
 }
 
@@ -277,6 +317,8 @@ void destroy_entities()
   rclc_executor_fini(&executor);
   rcl_subscription_fini(&torpedo_subscriber, &node);
   rcl_subscription_fini(&grabber_subscriber, &node);
+  rcl_publisher_fini(&log_publisher, &node);
+  std_msgs__msg__String__fini(&log_msg);
   rcl_node_fini(&node);
   rclc_support_fini(&support);
 
@@ -324,7 +366,7 @@ void actuator_loop()
 
   if (state == AGENT_CONNECTED)
   {
-    digitalWrite(LED_PIN, 0);
+    digitalWrite(LED_PIN, 1);
   }
   else
   {
