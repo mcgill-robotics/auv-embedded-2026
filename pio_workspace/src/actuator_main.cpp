@@ -18,10 +18,6 @@
 // std msg type libraries
 #include <std_msgs/msg/u_int8.h>
 
-// Error checking macros
-#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.println("[ERROR] RCL check failed"); return false;}}
-#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){Serial.println("[ERROR] RCL soft check failed");}}
-
 // Define torpedo Positions
 #define OPEN_ONE 1065
 #define CLOSED 1450
@@ -36,6 +32,20 @@
 #define LED_PIN 13
 #define TORPEDO_PIN 10
 #define GRABBER_PIN 11
+
+void error_loop() {
+  int error = 0;
+  while (error < 10) {
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    delay(100);
+    error++;
+  }
+  digitalWrite(LED_PIN, HIGH);
+}
+
+// Error checking macros
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop(); return false;}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 // Macro for non-blocking timing in the state machine
 #define EXECUTE_EVERY_N_MS(MS, X)      \
@@ -82,6 +92,10 @@ enum grabber_positions
   grabber_closed = 1
 } grabber_command;
 
+// Target positions for non-blocking servo movement
+int target_torpedo_us = CLOSED;
+int target_grabber_us = GRABBER_OPEN;
+
 // Forward declarations
 bool create_entities();
 void destroy_entities();
@@ -114,96 +128,74 @@ int grabberMsgToAngle(uint8_t grabberPositionMsg) {
   return grabberAngle;
 }
 
-// Function to move torpedo servo to a specific numeric position
-void sweepTorpedo(int targetPosition)
+// Non-blocking servo update called inside actuator_loop()
+void updateServos()
 {
-  int stepDelay = 1;
-  int currentPosition = torpedoServo.readMicroseconds();
-  int step = (targetPosition > currentPosition) ? 50 : -50;
-
-  for (int us = currentPosition; (step > 0) ? (us <= targetPosition) : (us >= targetPosition); us += step)
+  static int64_t last_step_time = 0;
+  int64_t now = uxr_millis();
+  if (now - last_step_time < 2)
   {
-    torpedoServo.writeMicroseconds(us);
-    delay(stepDelay);
+    return;
   }
-  torpedoServo.writeMicroseconds(targetPosition);
+  last_step_time = now;
+
+  int cur_torpedo = torpedoServo.readMicroseconds();
+  if (cur_torpedo != target_torpedo_us)
+  {
+    int step = (target_torpedo_us > cur_torpedo) ? 50 : -50;
+    if (abs(target_torpedo_us - cur_torpedo) <= abs(step))
+    {
+      torpedoServo.writeMicroseconds(target_torpedo_us);
+    }
+    else
+    {
+      torpedoServo.writeMicroseconds(cur_torpedo + step);
+    }
+  }
+
+  int cur_grabber = grabberServo.readMicroseconds();
+  if (cur_grabber != target_grabber_us)
+  {
+    int step = (target_grabber_us > cur_grabber) ? 20 : -20;
+    if (abs(target_grabber_us - cur_grabber) <= abs(step))
+    {
+      grabberServo.writeMicroseconds(target_grabber_us);
+    }
+    else
+    {
+      grabberServo.writeMicroseconds(cur_grabber + step);
+    }
+  }
 }
 
-// Function to move grabber servo to a specified angle
-void sweepGrabber(uint8_t targetPositionMsg)
-{
-  // can be tuned
-  int stepDelay = 2;
-
-  // convert input message from ros (0-255) into a scale between open and closed
-  int targetPositionAngle = grabberMsgToAngle(targetPositionMsg);
-
-  int currentPosition = grabberServo.readMicroseconds();
-
-  int step = (targetPositionAngle > currentPosition) ? 20 : -20;
-
-  for (int us = currentPosition; (step > 0) ? (us <= targetPositionAngle) : (us >= targetPositionAngle); us += step)
-  {
-    grabberServo.writeMicroseconds(us);
-    delay(stepDelay);
-  }
-  grabberServo.writeMicroseconds(targetPositionAngle);
-}
-
-
-// Function to parse torpedo msg and move torpedo servo accordingly
+// Function to parse torpedo msg and set target position accordingly
 void torpedo_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
   torpedo_command = (torpedo_positions)msg->data;
-  Serial.print("[TORPEDO_CALLBACK] Received command: ");
-  Serial.println((int)torpedo_command);
-  int cur_pwm = torpedoServo.readMicroseconds();
-  Serial.print("[TORPEDO_CALLBACK] Current PWM: ");
-  Serial.println(cur_pwm);
 
   switch (torpedo_command)
   {
   case closed:
-    Serial.println("[TORPEDO] Sweeping to CLOSED");
-    sweepTorpedo(CLOSED);
-    Serial.println("[TORPEDO] Sweep complete");
+    target_torpedo_us = CLOSED;
     break;
   case shoot_one:
-    Serial.println("[TORPEDO] Sweeping to SHOOT_ONE");
-    sweepTorpedo(OPEN_ONE);
-    Serial.println("[TORPEDO] Sweep complete");
+    target_torpedo_us = OPEN_ONE;
     break;
   case shoot_two:
-    Serial.println("[TORPEDO] Sweeping to SHOOT_TWO");
-    sweepTorpedo(OPEN_BOTH);
-    Serial.println("[TORPEDO] Sweep complete");
+    target_torpedo_us = OPEN_BOTH;
     break;
   default:
-    Serial.print("[TORPEDO] Unknown command: ");
-    Serial.println((int)torpedo_command);
     break;
   }
 }
 
-// Function to parse grabber msg and move grabber servo accordingly
+// Function to parse grabber msg and set target position accordingly
 void grabber_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
   uint8_t in = msg->data;
-  int target_angle = grabberMsgToAngle(in);
-  int cur_pwm = grabberServo.readMicroseconds();
-
-  Serial.print("[GRABBER_CALLBACK] Received msg: ");
-  Serial.println((int)in);
-  Serial.print("[GRABBER_CALLBACK] Current PWM: ");
-  Serial.println(cur_pwm);
-  Serial.print("[GRABBER_CALLBACK] Target PWM: ");
-  Serial.println(target_angle);
-
-  Serial.println("[GRABBER] Sweeping to target");
-  sweepGrabber(in);
-  Serial.println("[GRABBER] Sweep complete");
+  target_grabber_us = grabberMsgToAngle(in);
 }
 
 // Setup function
@@ -221,12 +213,14 @@ void actuator_setup()
   grabberServo.attach(GRABBER_PIN);
   delay(100);
   grabberServo.writeMicroseconds(GRABBER_OPEN);
+  target_grabber_us = GRABBER_OPEN;
   delay(500);
 
   // Attach and initialize torpedo servo
   torpedoServo.attach(TORPEDO_PIN);
   delay(100);
   torpedoServo.writeMicroseconds(CLOSED);
+  target_torpedo_us = CLOSED;
   delay(500);
 
   // Set initial msgs
@@ -243,9 +237,12 @@ bool create_entities()
   allocator = rcl_get_default_allocator();
 
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+
+  node = rcl_get_zero_initialized_node();
   RCCHECK(rclc_node_init_default(&node, "actuator_node", "", &support));
 
   // Torpedo subscriber
+  torpedo_subscriber = rcl_get_zero_initialized_subscription();
   RCCHECK(rclc_subscription_init_default(
       &torpedo_subscriber,
       &node,
@@ -253,14 +250,16 @@ bool create_entities()
       "/actuators/torpedo"));
 
   // Grabber subscriber
+  grabber_subscriber = rcl_get_zero_initialized_subscription();
   RCCHECK(rclc_subscription_init_default(
       &grabber_subscriber,
       &node,
       ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
       "/actuators/grabber"));
 
-  // Executor with increased buffer: 100 handles for proper memory allocation
-  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator));
+  // Zero-initialize executor and use 10 handles for proper memory allocation
+  executor = rclc_executor_get_zero_initialized_executor();
+  RCCHECK(rclc_executor_init(&executor, &support.context, 10, &allocator));
 
   RCCHECK(rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA));
@@ -271,20 +270,21 @@ bool create_entities()
 // Destroy all entities required for ros
 void destroy_entities()
 {
-  disconnectUSB();
-  delay(25);
-
   rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
   (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
+  // Clean up executor first while USB is active before destroying subscriptions/node
+  rclc_executor_fini(&executor);
   rcl_subscription_fini(&torpedo_subscriber, &node);
   rcl_subscription_fini(&grabber_subscriber, &node);
   rcl_node_fini(&node);
-  rclc_executor_fini(&executor);
   rclc_support_fini(&support);
 
-  delay(25);
+  // Toggle USB after entities are fully freed
+  disconnectUSB();
+  delay(100);
   connectUSB();
+  delay(100);
 }
 
 // Main function; state machine to handle ros connection state
@@ -309,6 +309,7 @@ void actuator_loop()
     if (state == AGENT_CONNECTED)
     {
       rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+      updateServos();
     }
     break;
 
