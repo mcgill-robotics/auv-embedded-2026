@@ -366,7 +366,7 @@ void actuator_loop()
 
   if (state == AGENT_CONNECTED)
   {
-    digitalWrite(LED_PIN, 1);
+    EXECUTE_EVERY_N_MS(3000, digitalWrite(LED_PIN, !digitalRead(LED_PIN)));
   }
   else
   {
