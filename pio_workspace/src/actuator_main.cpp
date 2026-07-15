@@ -2,12 +2,11 @@
 
 #include "actuator_main.h"
 
-// Basic libraries
 #include <Arduino.h>
 #include <Servo.h>
 
-// MicroROS libraries
 #include <micro_ros_arduino.h>
+
 #include <stdio.h>
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
@@ -33,35 +32,49 @@
 #define TORPEDO_PIN 10
 #define GRABBER_PIN 11
 
-// Macro for non-blocking timing in the state machine
-#define EXECUTE_EVERY_N_MS(MS, X)      \
-  do                                   \
-  {                                    \
-    static volatile int64_t init = -1; \
-    if (init == -1)                    \
-    {                                  \
-      init = uxr_millis();             \
-    }                                  \
-    if (uxr_millis() - init > MS)      \
-    {                                  \
-      X;                               \
-      init = uxr_millis();             \
-    }                                  \
-  } while (0)
-
 // Declare Servo objects
 Servo torpedoServo;
 Servo grabberServo;
 
-// Declare microROS variables
+bool micro_ros_init_successful;
+
 rcl_subscription_t torpedo_subscriber;
-rcl_subscription_t grabber_subscriber;
 std_msgs__msg__UInt8 torpedo_msg;
+
+rcl_subscription_t grabber_subscriber;
 std_msgs__msg__UInt8 grabber_msg;
+
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
+rcl_timer_t timer;
+
+#define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
+#define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
+
+#define EXECUTE_EVERY_N_MS(MS, X)  do { \
+  static volatile int64_t init = -1; \
+  if (init == -1) { init = uxr_millis();} \
+  if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
+} while (0)\
+
+void error_loop() {
+    int error = 0;
+    while (error < 10) {
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+        delay(100);
+        error++;
+    }
+    digitalWrite(LED_PIN, HIGH);
+}
+
+enum states {
+  WAITING_AGENT,
+  AGENT_AVAILABLE,
+  AGENT_CONNECTED,
+  AGENT_DISCONNECTED
+} state;
 
 // Torpedo position commands
 enum torpedo_positions
@@ -77,29 +90,6 @@ enum grabber_positions
   grabber_open = 0,
   grabber_closed = 1
 } grabber_command;
-
-// Forward declarations
-bool create_entities();
-void destroy_entities();
-
-// Define states for the connection state machine
-enum states
-{
-  WAITING_AGENT,
-  AGENT_AVAILABLE,
-  AGENT_CONNECTED,
-  AGENT_DISCONNECTED
-} state;
-
-// Functions to manually redeclare USB to deal with disconnect/reconnect
-void disconnectUSB()
-{
-  USB1_USBCMD = 0;
-}
-void connectUSB()
-{
-  USB1_USBCMD = 1;
-}
 
 // Function to convert between ROS2 grabber positions and actual angles
 int grabberMsgToAngle(uint8_t grabberPositionMsg) {
@@ -146,7 +136,6 @@ void sweepGrabber(uint8_t targetPositionMsg)
   grabberServo.writeMicroseconds(targetPositionAngle);
 }
 
-
 // Function to parse torpedo msg and move torpedo servo accordingly
 void torpedo_callback(const void *msgin)
 {
@@ -177,141 +166,119 @@ void grabber_callback(const void *msgin)
   sweepGrabber(msg->data);
 }
 
-// Setup function
-void actuator_setup()
-{
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
-
-  // Set transport to serial
-  Serial.begin(115200);
-  set_microros_transports();
-  delay(500);
-
-  // Attach and initialize grabber servo
-  grabberServo.attach(GRABBER_PIN);
-  delay(100);
-  grabberServo.writeMicroseconds(GRABBER_OPEN);
-  delay(500);
-
-  // Attach and initialize torpedo servo
-  torpedoServo.attach(TORPEDO_PIN);
-  delay(100);
-  torpedoServo.writeMicroseconds(CLOSED);
-  delay(500);
-
-  // Set initial msgs
-  torpedo_msg.data = closed;
-  grabber_msg.data = grabber_open;
-
-  // Initialize state machine
-  state = WAITING_AGENT;
-}
-
-// Create all entities required for ros
-bool create_entities()
-{
+bool create_entities() {
   allocator = rcl_get_default_allocator();
 
-  rcl_ret_t rc = rclc_support_init(&support, 0, NULL, &allocator);
-  if (rc != RCL_RET_OK)
-    return false;
+  // create init_options
+  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
-  rc = rclc_node_init_default(&node, "actuator_node", "", &support);
-  if (rc != RCL_RET_OK)
-    return false;
+  // create node
+  RCCHECK(rclc_node_init_default(&node, "actuator_node", "", &support));
 
-  // Torpedo subscriber
-  rc = rclc_subscription_init_default(
-      &torpedo_subscriber,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
-      "/actuators/torpedo");
-  if (rc != RCL_RET_OK)
-    return false;
+  RCCHECK(rclc_subscription_init_default(
+    &torpedo_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
+    "/actuators/torpedo"));
+  
+  RCCHECK(rclc_subscription_init_default(
+    &grabber_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
+    "/actuators/grabber"));
 
-  // Grabber subscriber
-  rc = rclc_subscription_init_default(
-      &grabber_subscriber,
-      &node,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt8),
-      "/actuators/grabber");
-  if (rc != RCL_RET_OK)
-    return false;
 
-  // Executor needs 2 handles now (one per subscriber)
-  rc = rclc_executor_init(&executor, &support.context, 2, &allocator);
-  if (rc != RCL_RET_OK)
-    return false;
+  // create executor
+  executor = rclc_executor_get_zero_initialized_executor();
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator)); // number arbitrarily set, idk what is the correct on yet, trial and error later on
+  RCCHECK(rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA));
 
-  rc = rclc_executor_add_subscription(&executor, &torpedo_subscriber, &torpedo_msg, &torpedo_callback, ON_NEW_DATA);
-  if (rc != RCL_RET_OK)
-    return false;
-
-  rc = rclc_executor_add_subscription(&executor, &grabber_subscriber, &grabber_msg, &grabber_callback, ON_NEW_DATA);
-  if (rc != RCL_RET_OK)
-    return false;
 
   return true;
 }
 
-// Destroy all entities required for ros
-void destroy_entities()
-{
-  disconnectUSB();
+void disconnectUSB() {
+  USB1_USBCMD = 0;
+}
+void connectUSB() {
+  USB1_USBCMD = 1;
+}
 
-  rmw_context_t *rmw_context = rcl_context_get_rmw_context(&support.context);
-  (void)rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
+void destroy_entities() {
+  disconnectUSB();
+  delay(25);
+
+  rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
+  (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
   rcl_subscription_fini(&torpedo_subscriber, &node);
   rcl_subscription_fini(&grabber_subscriber, &node);
-  rcl_node_fini(&node);
+  rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
+  rcl_node_fini(&node);
   rclc_support_fini(&support);
 
+  delay(25);
   connectUSB();
 }
 
-// Main function; state machine to handle ros connection state
-void actuator_loop()
-{
-  switch (state)
-  {
-  case WAITING_AGENT:
-    EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
-    break;
+void actuator_setup() {
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
 
-  case AGENT_AVAILABLE:
-    state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
-    if (state == WAITING_AGENT)
-    {
+  grabberServo.attach(GRABBER_PIN);
+  delay(10);
+  grabberServo.writeMicroseconds(GRABBER_OPEN);
+  delay(10);
+
+  torpedoServo.attach(TORPEDO_PIN);
+  delay(10);
+  torpedoServo.writeMicroseconds(CLOSED);
+  delay(10);
+
+  // Configure serial transport
+  Serial.begin(115200);
+  set_microros_transports();
+  delay(2000);
+
+  // allocates correct message sizes and initialzies to 0, required or crashes
+  torpedo_msg.data = closed;
+  grabber_msg.data = grabber_open;
+
+  // first state
+  state = WAITING_AGENT;
+}
+
+void actuator_loop() {
+  switch (state) {
+    case WAITING_AGENT:
+      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      break;
+    case AGENT_AVAILABLE:
+      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (state == WAITING_AGENT) {
+        destroy_entities();
+      };
+      break;
+    case AGENT_CONNECTED:
+      EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      if (state == AGENT_CONNECTED) {
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+      } else {
+      }
+      break;
+    case AGENT_DISCONNECTED:
       destroy_entities();
-    }
-    break;
-
-  case AGENT_CONNECTED:
-    EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-    if (state == AGENT_CONNECTED)
-    {
-      rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-    }
-    break;
-
-  case AGENT_DISCONNECTED:
-    destroy_entities();
-    state = WAITING_AGENT;
-    break;
-
-  default:
-    break;
+      state = WAITING_AGENT;
+      break;
+    default:
+      break;
   }
 
-  if (state == AGENT_CONNECTED)
-  {
+  if (state == AGENT_CONNECTED) {
     digitalWrite(LED_PIN, 1);
-  }
-  else
-  {
+  } else {
     digitalWrite(LED_PIN, 0);
   }
 }
