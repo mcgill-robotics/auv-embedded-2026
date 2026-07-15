@@ -193,16 +193,16 @@ void torpedo_callback(const void *msgin)
 // Function to parse grabber msg and set target position accordingly
 void grabber_callback(const void *msgin)
 {
-  const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
-  uint8_t in = msg->data;
-  target_grabber_us = grabberMsgToAngle(in);
+  digitalWrite(LED_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN, LOW);
 }
 
 // Setup function
 void actuator_setup()
 {
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+  digitalWrite(LED_PIN, LOW);
 
   // Set transport to serial
   Serial.begin(115200);
@@ -324,7 +324,7 @@ void actuator_loop()
 
   if (state == AGENT_CONNECTED)
   {
-    digitalWrite(LED_PIN, 1);
+    digitalWrite(LED_PIN, 0);
   }
   else
   {
