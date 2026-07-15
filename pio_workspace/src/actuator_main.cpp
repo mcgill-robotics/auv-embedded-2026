@@ -91,6 +91,17 @@ enum grabber_positions
   grabber_closed = 1
 } grabber_command;
 
+// Non-blocking sweep state (targets set by callbacks, stepped in the main loop)
+volatile int torpedo_target_us = CLOSED;
+volatile int grabber_target_us = GRABBER_OPEN;
+
+unsigned long lastTorpedoStepTime = 0;
+unsigned long lastGrabberStepTime = 0;
+const int torpedoStepDelay = 1;   // ms between steps, matches old sweepTorpedo
+const int grabberStepDelay = 2;   // ms between steps, matches old sweepGrabber
+const int torpedoStepSize = 50;   // matches old sweepTorpedo
+const int grabberStepSize = 20;   // matches old sweepGrabber
+
 // Function to convert between ROS2 grabber positions and actual angles
 int grabberMsgToAngle(uint8_t grabberPositionMsg) {
 
@@ -100,43 +111,47 @@ int grabberMsgToAngle(uint8_t grabberPositionMsg) {
   return grabberAngle;
 }
 
-// Function to move torpedo servo to a specific numeric position
-void sweepTorpedo(int targetPosition)
-{
-  int stepDelay = 1;
+// Non-blocking step function for torpedo, called every loop iteration
+void stepTorpedo() {
   int currentPosition = torpedoServo.readMicroseconds();
-  int step = (targetPosition > currentPosition) ? 50 : -50;
+  if (currentPosition == torpedo_target_us) return;
 
-  for (int us = currentPosition; (step > 0) ? (us <= targetPosition) : (us >= targetPosition); us += step)
-  {
-    torpedoServo.writeMicroseconds(us);
-    delay(stepDelay);
+  if (millis() - lastTorpedoStepTime < torpedoStepDelay) return;
+  lastTorpedoStepTime = millis();
+
+  int step = (torpedo_target_us > currentPosition) ? torpedoStepSize : -torpedoStepSize;
+  int nextPosition = currentPosition + step;
+
+  // clamp so we don't overshoot the target
+  if ((step > 0 && nextPosition > torpedo_target_us) ||
+      (step < 0 && nextPosition < torpedo_target_us)) {
+    nextPosition = torpedo_target_us;
   }
-  torpedoServo.writeMicroseconds(targetPosition);
+
+  torpedoServo.writeMicroseconds(nextPosition);
 }
 
-// Function to move grabber servo to a specified angle
-void sweepGrabber(uint8_t targetPositionMsg)
-{
-  // can be tuned
-  int stepDelay = 2;
-
-  // convert input message from ros (0-255) into a scale between open and closed
-  int targetPositionAngle = grabberMsgToAngle(targetPositionMsg);
-
+// Non-blocking step function for grabber, called every loop iteration
+void stepGrabber() {
   int currentPosition = grabberServo.readMicroseconds();
+  if (currentPosition == grabber_target_us) return;
 
-  int step = (targetPositionAngle > currentPosition) ? 20 : -20;
+  if (millis() - lastGrabberStepTime < grabberStepDelay) return;
+  lastGrabberStepTime = millis();
 
-  for (int us = currentPosition; (step > 0) ? (us <= targetPositionAngle) : (us >= targetPositionAngle); us += step)
-  {
-    grabberServo.writeMicroseconds(us);
-    delay(stepDelay);
+  int step = (grabber_target_us > currentPosition) ? grabberStepSize : -grabberStepSize;
+  int nextPosition = currentPosition + step;
+
+  // clamp so we don't overshoot the target
+  if ((step > 0 && nextPosition > grabber_target_us) ||
+      (step < 0 && nextPosition < grabber_target_us)) {
+    nextPosition = grabber_target_us;
   }
-  grabberServo.writeMicroseconds(targetPositionAngle);
+
+  grabberServo.writeMicroseconds(nextPosition);
 }
 
-// Function to parse torpedo msg and move torpedo servo accordingly
+// Function to parse torpedo msg and set the new target (non-blocking)
 void torpedo_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
@@ -145,25 +160,25 @@ void torpedo_callback(const void *msgin)
   switch (torpedo_command)
   {
   case closed:
-    sweepTorpedo(CLOSED);
+    torpedo_target_us = CLOSED;
     break;
   case shoot_one:
-    sweepTorpedo(OPEN_ONE);
+    torpedo_target_us = OPEN_ONE;
     break;
   case shoot_two:
-    sweepTorpedo(OPEN_BOTH);
+    torpedo_target_us = OPEN_BOTH;
     break;
   default:
     break;
   }
 }
 
-// Function to parse grabber msg and move grabber servo accordingly
+// Function to parse grabber msg and set the new target (non-blocking)
 void grabber_callback(const void *msgin)
 {
   const std_msgs__msg__UInt8 *msg = (const std_msgs__msg__UInt8 *)msgin;
 
-  sweepGrabber(msg->data);
+  grabber_target_us = grabberMsgToAngle(msg->data);
 }
 
 bool create_entities() {
@@ -246,6 +261,10 @@ void actuator_setup() {
   torpedo_msg.data = closed;
   grabber_msg.data = grabber_open;
 
+  // initialize non-blocking sweep targets to match starting positions
+  torpedo_target_us = CLOSED;
+  grabber_target_us = GRABBER_OPEN;
+
   // first state
   state = WAITING_AGENT;
 }
@@ -275,6 +294,11 @@ void actuator_loop() {
     default:
       break;
   }
+
+  // step the servos toward their targets every loop iteration, non-blocking,
+  // regardless of connection state (so they still finish a move if disconnected)
+  stepTorpedo();
+  stepGrabber();
 
   if (state == AGENT_CONNECTED) {
     digitalWrite(LED_PIN, 1);
