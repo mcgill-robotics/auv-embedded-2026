@@ -13,3 +13,12 @@ We are a dedicated team of students from McGill Robotics, focused on designing a
 - **Tutorials**: Guides and tutorials on using ROS (Robot Operating System) and Arduino for our projects.
 
 For more detail please visit our [Wiki](https://github.com/mcgill-robotics/auv-embedded-2026/wiki).
+
+## Hydrophone related work 
+
+You will find in the `dev/hydrophone` branch the following folders : 
+- `documentation`, documenting the design of the new hydrophone ADC board. The documentation was written using _mkdocs_, and to view it you'll need to 1. clone the repository locally, then install mkdocs using `pip install mkdocs` and finally render the web documentation using `mkdocs serve` _in the `documentation` folder_
+- `kicad`, which contains the source files (`ADC.kicad_pro`) for the design of the new ADC board
+- `ltspice`, for the LTSPICE simulations of the ADC board signal chain.
+
+If you have any questions regarding the hydrophone board design please contact @Oscar-T24
