@@ -9,14 +9,14 @@
 		(rev "1.2")
 	)
 	(lib_symbols
-		(symbol "1.8V LDO (SOIC):ADP7118ARDZ-1.8"
+		(symbol "ADP7118ARDZ-1.8:ADP7118ARDZ-1.8"
 			(pin_names
 				(offset 0.254)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U4"
+			(property "Reference" "U"
 				(at 25.4 10.16 0)
 				(effects
 					(font
@@ -32,7 +32,7 @@
 					)
 				)
 			)
-			(property "Footprint" "ADP7118ARDZ:RD-8-1_ADI"
+			(property "Footprint" "RD-8-1_ADI"
 				(at 0 0 0)
 				(effects
 					(font
@@ -172,24 +172,6 @@
 						)
 					)
 				)
-				(pin unspecified line
-					(at 0 -7.62 0)
-					(length 7.62)
-					(name "SS"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
 				(pin power_in line
 					(at 0 -17.78 0)
 					(length 7.62)
@@ -244,7 +226,27 @@
 						)
 					)
 				)
-				(pin power_out line
+			)
+			(symbol "ADP7118ARDZ-1.8_1_1"
+				(pin passive line
+					(at 0 -7.62 0)
+					(length 7.62)
+					(name "SS"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
 					(at 0 -30.48 0)
 					(length 7.62)
 					(name "GND"
@@ -262,8 +264,6 @@
 						)
 					)
 				)
-			)
-			(symbol "ADP7118ARDZ-1.8_1_1"
 				(pin power_out line
 					(at 50.8 0 180)
 					(length 7.62)
@@ -282,7 +282,7 @@
 						)
 					)
 				)
-				(pin power_out line
+				(pin passive line
 					(at 50.8 -2.54 180)
 					(length 7.62)
 					(name "VOUT"
@@ -303,14 +303,14 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "3.3V LDO (SOIC):ADP7118ARDZ-3.3"
+		(symbol "ADP7118ARDZ-3.3:ADP7118ARDZ-3.3"
 			(pin_names
 				(offset 0.254)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U3"
+			(property "Reference" "U"
 				(at 25.4 10.16 0)
 				(effects
 					(font
@@ -326,7 +326,7 @@
 					)
 				)
 			)
-			(property "Footprint" "ADP7118ARDZ:RD-8-1_ADI"
+			(property "Footprint" "RD-8-1_ADI"
 				(at 0 0 0)
 				(effects
 					(font
@@ -538,7 +538,9 @@
 						)
 					)
 				)
-				(pin power_out line
+			)
+			(symbol "ADP7118ARDZ-3.3_1_1"
+				(pin passive line
 					(at 0 -30.48 0)
 					(length 7.62)
 					(name "GND"
@@ -556,8 +558,6 @@
 						)
 					)
 				)
-			)
-			(symbol "ADP7118ARDZ-3.3_1_1"
 				(pin power_out line
 					(at 50.8 0 180)
 					(length 7.62)
@@ -576,7 +576,7 @@
 						)
 					)
 				)
-				(pin power_out line
+				(pin passive line
 					(at 50.8 -2.54 180)
 					(length 7.62)
 					(name "VOUT"
@@ -3310,14 +3310,288 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "LTC6655-NR-2.5:LTC6655BHMS8-2.5-PBF"
+		(symbol "LTC6655-1.25:LTC6655BHMS8-1.25-PBF"
 			(pin_names
 				(offset 0.254)
 			)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U6"
+			(property "Reference" "U"
+				(at 22.86 10.16 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Value" "LTC6655BHMS8-1.25-PBF"
+				(at 22.86 7.62 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Footprint" "MSOP-8_MS_LIT"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_locked" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "LTC6655BHMS8-1.25#PBF"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "MSOP-8_MS_LIT MSOP-8_MS_LIT-M MSOP-8_MS_LIT-L"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LTC6655BHMS8-1.25-PBF_0_1"
+				(polyline
+					(pts
+						(xy 7.62 5.08) (xy 7.62 -30.48)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 7.62 -30.48) (xy 38.1 -30.48)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 38.1 5.08) (xy 7.62 5.08)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 38.1 -30.48) (xy 38.1 5.08)
+					)
+					(stroke
+						(width 0.127)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin input line
+					(at 0 0 0)
+					(length 7.62)
+					(name "*SHDN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at 0 -2.54 0)
+					(length 7.62)
+					(name "VIN"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -17.78 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -20.32 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -22.86 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -25.4 0)
+					(length 7.62)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 45.72 0 180)
+					(length 7.62)
+					(name "VOUT_F"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 45.72 -2.54 180)
+					(length 7.62)
+					(name "VOUT_S"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "LTC6655-2.5:LTC6655BHMS8-2.5-PBF"
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
 				(at 22.86 10.16 0)
 				(effects
 					(font
@@ -3333,7 +3607,7 @@
 					)
 				)
 			)
-			(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
+			(property "Footprint" "MSOP-8_MS_LIT"
 				(at 0 0 0)
 				(effects
 					(font
@@ -3565,283 +3839,7 @@
 						)
 					)
 				)
-				(pin power_in line
-					(at 45.72 -2.54 180)
-					(length 7.62)
-					(name "VOUT_S"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "LTC6655BHMS8-1.25-PBF_1"
-			(pin_names
-				(offset 0.254)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U2"
-				(at 22.86 10.16 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Value" "LTC6655BHMS8-1.25-PBF"
-				(at 22.86 7.62 0)
-				(effects
-					(font
-						(size 1.524 1.524)
-					)
-				)
-			)
-			(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-						(italic yes)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_locked" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "LTC6655BHMS8-1.25#PBF"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "MSOP-8_MS_LIT MSOP-8_MS_LIT-M MSOP-8_MS_LIT-L"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "LTC6655BHMS8-1.25-PBF_1_0_1"
-				(polyline
-					(pts
-						(xy 7.62 5.08) (xy 7.62 -30.48)
-					)
-					(stroke
-						(width 0.127)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 7.62 -30.48) (xy 38.1 -30.48)
-					)
-					(stroke
-						(width 0.127)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 38.1 5.08) (xy 7.62 5.08)
-					)
-					(stroke
-						(width 0.127)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 38.1 -30.48) (xy 38.1 5.08)
-					)
-					(stroke
-						(width 0.127)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at 0 0 0)
-					(length 7.62)
-					(name "*SHDN"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 0 -2.54 0)
-					(length 7.62)
-					(name "VIN"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -17.78 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -20.32 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -22.86 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at 0 -25.4 0)
-					(length 7.62)
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(symbol "LTC6655BHMS8-1.25-PBF_1_1_1"
 				(pin power_out line
-					(at 45.72 0 180)
-					(length 7.62)
-					(name "VOUT_F"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "7"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
 					(at 45.72 -2.54 180)
 					(length 7.62)
 					(name "VOUT_S"
@@ -5189,16 +5187,22 @@
 		(uuid "c9cb8cf3-f248-46c7-8837-4d0d35907d83")
 	)
 	(junction
+		(at 58.42 140.97)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "01e7a68e-426e-4ed1-aa1d-3e2b9a64b736")
+	)
+	(junction
 		(at 359.41 118.11)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "037425e5-88a4-4f0d-910b-e45b13f860b6")
 	)
 	(junction
-		(at 241.3 224.79)
+		(at 156.21 177.8)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "04a3cad2-1b33-474e-8068-bc1be61a9ddb")
+		(uuid "080aa093-e791-47f5-8719-2fe20fff40d6")
 	)
 	(junction
 		(at 328.93 120.65)
@@ -5219,16 +5223,10 @@
 		(uuid "264ebce9-1bcf-4f51-a06b-819effe8f7e2")
 	)
 	(junction
-		(at 241.3 204.47)
+		(at 87.63 196.85)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "292379d0-072a-4de7-80c6-0432fd0d26ef")
-	)
-	(junction
-		(at 287.02 207.01)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "31cc747e-1311-4632-a793-8ec49c4ad308")
+		(uuid "2e2914a3-0d42-47fd-a860-47001bbf0c5c")
 	)
 	(junction
 		(at 323.85 120.65)
@@ -5249,10 +5247,28 @@
 		(uuid "39891e24-e2d2-4458-9d4d-6172eba1f78a")
 	)
 	(junction
-		(at 201.93 177.8)
+		(at 156.21 195.58)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "3dd1aa35-d830-4786-9137-4a39cbfe0759")
+		(uuid "3b7af16a-e61d-4a80-8c56-6bbd3d4b213d")
+	)
+	(junction
+		(at 87.63 194.31)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "3e153ab0-5aad-4047-ab79-aba37f9219ba")
+	)
+	(junction
+		(at 241.3 204.47)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "416e5e8f-9ba0-4495-a057-b84abaab16a7")
+	)
+	(junction
+		(at 87.63 173.99)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "41ab91f0-d697-4a46-9820-f5d495f19c8e")
 	)
 	(junction
 		(at 203.2 123.19)
@@ -5261,22 +5277,34 @@
 		(uuid "43299703-7442-495e-a532-e9b39f2a3b06")
 	)
 	(junction
+		(at 241.3 207.01)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4d393a94-b50e-410b-9ab3-19af5a4d763f")
+	)
+	(junction
+		(at 87.63 199.39)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "4ec9d799-9a00-4ae6-8e1b-1376fc181410")
+	)
+	(junction
 		(at 290.83 207.01)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "4f17bbf6-4a66-4c13-9bb1-729edaaa345f")
 	)
 	(junction
-		(at 58.42 140.97)
+		(at 156.21 198.12)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "54037ef9-ee05-4c6a-ba40-cf00f4da0fc7")
+		(uuid "57fbe791-04d7-4c22-8ea6-43b069c69499")
 	)
 	(junction
-		(at 241.3 207.01)
+		(at 143.51 153.67)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "5939378c-d784-4711-bfe0-06a770d41500")
+		(uuid "5803ad67-6bc3-4951-b1c5-b4ea98de5efa")
 	)
 	(junction
 		(at 109.22 125.73)
@@ -5291,22 +5319,16 @@
 		(uuid "63bb4d57-c52d-43f2-8ff7-5c049cc751e8")
 	)
 	(junction
-		(at 241.3 229.87)
+		(at 201.93 177.8)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "670e57ee-0f4c-4c19-a23d-07aa60e590da")
+		(uuid "661b82e2-6a66-47ae-b03b-f603c07be908")
 	)
 	(junction
-		(at 156.21 195.58)
+		(at 241.3 224.79)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "7498417d-0b20-456a-9bae-69bef37ff98a")
-	)
-	(junction
-		(at 194.31 125.73)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "7f35e729-8614-4de2-9e16-de2665a9f034")
+		(uuid "6bd15f88-5cc7-4047-8358-8f8d2848bcd4")
 	)
 	(junction
 		(at 143.51 121.92)
@@ -5321,22 +5343,16 @@
 		(uuid "8ca26a61-d4a0-4bf0-aeb8-5a4dd78361c2")
 	)
 	(junction
-		(at 241.3 227.33)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "8d857025-e4c2-4952-94ba-26cd01572235")
-	)
-	(junction
 		(at 121.92 44.45)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "964b8d5e-249d-4fc5-998d-10f5fff1fdbf")
 	)
 	(junction
-		(at 87.63 199.39)
+		(at 156.21 175.26)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "9a8a79ee-b6fe-4f07-8c13-74e1d05b0cae")
+		(uuid "9894aad3-f82a-4c0f-b495-81e3fbca41a3")
 	)
 	(junction
 		(at 207.01 123.19)
@@ -5357,16 +5373,16 @@
 		(uuid "a7565bc5-de4d-4e9c-9f40-3730f2da471c")
 	)
 	(junction
-		(at 87.63 196.85)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ab6c13b3-a701-45b5-bec0-6faf112112e7")
-	)
-	(junction
 		(at 205.74 177.8)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "b13af255-20b8-42ff-8aae-0d4d6d31c3db")
+	)
+	(junction
+		(at 143.51 140.97)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "b8610298-43a3-40d3-9927-92aaf7398570")
 	)
 	(junction
 		(at 368.3 118.11)
@@ -5375,16 +5391,16 @@
 		(uuid "b9f1c8e2-1965-4f23-8419-69911029b7b3")
 	)
 	(junction
-		(at 133.35 176.53)
+		(at 241.3 229.87)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "bb7396c1-bc1b-4224-8874-5549d336f0cc")
+		(uuid "be834553-0204-4182-8238-75ef19c477bd")
 	)
 	(junction
-		(at 87.63 194.31)
+		(at 194.31 125.73)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "be2114eb-9415-4135-be71-dc346bb18c31")
+		(uuid "c4099ba0-bbb3-4678-9d6c-e363e579efb9")
 	)
 	(junction
 		(at 255.27 148.59)
@@ -5399,22 +5415,22 @@
 		(uuid "c898d55d-b03a-45a2-b0d8-0fde23ea1f79")
 	)
 	(junction
-		(at 87.63 173.99)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "cc453621-1e81-4a1f-90db-d6fac1e0685a")
-	)
-	(junction
 		(at 156.21 200.66)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "cea3d3bb-d76e-4026-b11a-cbb72a479655")
+		(uuid "d0981091-7c2b-47fe-bc7b-f5d77ed00e44")
 	)
 	(junction
 		(at 328.93 128.27)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d0fb682b-b36e-46e1-8af3-74b34e2b7707")
+	)
+	(junction
+		(at 133.35 176.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "d42dc109-a4be-48a1-944a-d573a154151b")
 	)
 	(junction
 		(at 55.88 140.97)
@@ -5426,31 +5442,13 @@
 		(at 87.63 176.53)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "dba6947d-ea50-4e14-b6b3-3693a1f24a6c")
+		(uuid "eb0fa594-97e0-4183-80c8-35c5678bd4e7")
 	)
 	(junction
-		(at 156.21 175.26)
+		(at 287.02 207.01)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "dbb28a18-d5c2-441a-ba6c-08539d1559ac")
-	)
-	(junction
-		(at 143.51 153.67)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "e0036797-ace7-43ce-8b63-9432813e6ac7")
-	)
-	(junction
-		(at 156.21 177.8)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "eca6861f-698e-49d1-ae28-8787eeb6d2af")
-	)
-	(junction
-		(at 156.21 198.12)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "f4a7fe30-866e-4ea9-8f3f-7548c4443d1e")
+		(uuid "eb2e8bc2-d67e-41a9-8116-a053160fc37d")
 	)
 	(junction
 		(at 137.16 176.53)
@@ -5459,10 +5457,10 @@
 		(uuid "f597f2b2-af0d-4d5b-a479-3c388fe26e81")
 	)
 	(junction
-		(at 143.51 140.97)
+		(at 241.3 227.33)
 		(diameter 0)
 		(color 0 0 0 0)
-		(uuid "f5ccd7e6-35cf-40d9-9578-c679431bd994")
+		(uuid "f8091d75-9d8f-4d3d-b9d2-5cbc27412c03")
 	)
 	(junction
 		(at 199.39 123.19)
@@ -5508,16 +5506,6 @@
 	)
 	(wire
 		(pts
-			(xy 87.63 196.85) (xy 87.63 199.39)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "04b4ba7f-727a-4d88-93a4-8e42d39bc3fb")
-	)
-	(wire
-		(pts
 			(xy 316.23 146.05) (xy 316.23 133.35)
 		)
 		(stroke
@@ -5538,7 +5526,7 @@
 	)
 	(wire
 		(pts
-			(xy 241.3 224.79) (xy 241.3 227.33)
+			(xy 241.3 222.25) (xy 241.3 224.79)
 		)
 		(stroke
 			(width 0)
@@ -5788,26 +5776,6 @@
 	)
 	(wire
 		(pts
-			(xy 241.3 222.25) (xy 241.3 224.79)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4d409f62-a75d-4f43-9abb-0769c15aa1cb")
-	)
-	(wire
-		(pts
-			(xy 87.63 194.31) (xy 87.63 196.85)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4d90d18f-1ed3-4a27-a4e5-bb3898d89bb3")
-	)
-	(wire
-		(pts
 			(xy 125.73 63.5) (xy 120.65 63.5)
 		)
 		(stroke
@@ -5875,6 +5843,16 @@
 			(type default)
 		)
 		(uuid "5e047341-0760-466f-a964-7c071bf364bd")
+	)
+	(wire
+		(pts
+			(xy 156.21 198.12) (xy 156.21 200.66)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5e117fb4-1888-47d4-bf7d-c59c3abc04f4")
 	)
 	(wire
 		(pts
@@ -5978,16 +5956,6 @@
 	)
 	(wire
 		(pts
-			(xy 241.3 227.33) (xy 241.3 229.87)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6e2879f8-6a0d-4120-b1bf-d4a48b298b93")
-	)
-	(wire
-		(pts
 			(xy 139.7 140.97) (xy 143.51 140.97)
 		)
 		(stroke
@@ -6018,13 +5986,13 @@
 	)
 	(wire
 		(pts
-			(xy 156.21 198.12) (xy 156.21 200.66)
+			(xy 87.63 196.85) (xy 87.63 199.39)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "76d1b366-93b8-465c-863a-6ab36589f57f")
+		(uuid "76bfa397-c679-406b-b5fb-d5d002c5a74c")
 	)
 	(wire
 		(pts
@@ -6055,6 +6023,16 @@
 			(type default)
 		)
 		(uuid "7d4e3dd6-ad05-494f-b59e-ea3e751cb547")
+	)
+	(wire
+		(pts
+			(xy 156.21 195.58) (xy 156.21 198.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7d510be0-df9e-481e-a583-b8f3422724b6")
 	)
 	(wire
 		(pts
@@ -6368,16 +6346,6 @@
 	)
 	(wire
 		(pts
-			(xy 156.21 195.58) (xy 156.21 198.12)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b50227d0-1205-4fa2-9cf9-ad1821a21044")
-	)
-	(wire
-		(pts
 			(xy 203.2 130.81) (xy 203.2 133.35)
 		)
 		(stroke
@@ -6588,6 +6556,26 @@
 	)
 	(wire
 		(pts
+			(xy 87.63 194.31) (xy 87.63 196.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d54d77ba-e41e-44d1-986c-21840e76585c")
+	)
+	(wire
+		(pts
+			(xy 241.3 224.79) (xy 241.3 227.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d7b9e30e-e48f-4967-83ad-70c2c2569e97")
+	)
+	(wire
+		(pts
 			(xy 232.41 147.32) (xy 232.41 146.05)
 		)
 		(stroke
@@ -6605,6 +6593,16 @@
 			(type default)
 		)
 		(uuid "dbab1857-9f1b-46e2-89bb-3b965772bec3")
+	)
+	(wire
+		(pts
+			(xy 241.3 227.33) (xy 241.3 229.87)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dbb6830a-c02b-44dc-8599-cfa06a02daa8")
 	)
 	(wire
 		(pts
@@ -6965,6 +6963,97 @@
 			(justify left bottom)
 		)
 		(uuid "e696ba91-9a0e-46df-ad95-12d82690a9df")
+	)
+	(symbol
+		(lib_id "ADP7118ARDZ-1.8:ADP7118ARDZ-1.8")
+		(at 58.42 123.19 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "00670138-a4a7-4f11-8b5f-c8d147fec14e")
+		(property "Reference" "U4"
+			(at 83.82 113.03 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "ADP7118ARDZ-1.8"
+			(at 83.82 115.57 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "ADP7118ARDZ-1-8:RD-8-1_ADI"
+			(at 58.42 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/adp7118.pdf"
+			(at 58.42 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 58.42 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "df04ed44-f58c-455d-bc60-a400d7a15041")
+		)
+		(pin "9"
+			(uuid "43d3333d-af37-452b-a419-8e30ac77bf31")
+		)
+		(pin "1"
+			(uuid "b919f5db-940a-4019-bde7-fc1087e72444")
+		)
+		(pin "8"
+			(uuid "9dd3ba5f-8342-4a47-bee1-f279d393b754")
+		)
+		(pin "7"
+			(uuid "eda9e1d0-99d2-44fe-b1af-16357e3b8d31")
+		)
+		(pin "6"
+			(uuid "1fb4acc6-0b8f-42ea-97d8-c7f67fea177d")
+		)
+		(pin "2"
+			(uuid "ca0b8d34-716e-4119-a3fa-b736e82b4e73")
+		)
+		(pin "4"
+			(uuid "e863940e-5e9d-482a-bd1b-d169e6ecbfa0")
+		)
+		(pin "5"
+			(uuid "dbd8f1cf-06bc-4f2b-8876-26b9b43acb39")
+		)
+		(instances
+			(project ""
+				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
+					(reference "U4")
+					(unit 1)
+				)
+			)
+		)
 	)
 	(symbol
 		(lib_id "power:+1V8")
@@ -8167,97 +8256,6 @@
 			(project "ADC"
 				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
 					(reference "#PWR054")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "3.3V LDO (SOIC):ADP7118ARDZ-3.3")
-		(at 143.51 123.19 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "320ac5d3-b3ab-4af2-b673-ee38074255a7")
-		(property "Reference" "U3"
-			(at 168.91 113.03 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "ADP7118ARDZ-3.3"
-			(at 168.91 115.57 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "ADP7118ARDZ-3-3:RD-8-1_ADI"
-			(at 143.51 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/adp7118.pdf"
-			(at 143.51 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 143.51 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "5"
-			(uuid "ad7b3562-aacc-4bdc-a591-befc932fe6a1")
-		)
-		(pin "3"
-			(uuid "d473b151-857c-4912-a68d-eb3e1e6c2688")
-		)
-		(pin "6"
-			(uuid "3736c9b3-6ef8-434f-a56f-0766d7f4ace3")
-		)
-		(pin "7"
-			(uuid "f89d7f0f-0d47-4d3b-968a-42b74646e18c")
-		)
-		(pin "8"
-			(uuid "b56948f1-12cf-4be7-9e58-a4f660d990f8")
-		)
-		(pin "4"
-			(uuid "e42a9dc3-b15e-4348-8ce8-04e6205b9750")
-		)
-		(pin "9"
-			(uuid "0ce71ebf-7307-485d-a616-b4e79a6174a6")
-		)
-		(pin "1"
-			(uuid "1c82e2d1-1c7c-4f01-820b-c0e67a738c96")
-		)
-		(pin "2"
-			(uuid "c54540c7-9fc1-47bf-aecf-1d69c04ad145")
-		)
-		(instances
-			(project ""
-				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
-					(reference "U3")
 					(unit 1)
 				)
 			)
@@ -9876,6 +9874,97 @@
 		)
 	)
 	(symbol
+		(lib_id "ADP7118ARDZ-3.3:ADP7118ARDZ-3.3")
+		(at 143.51 123.19 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "60cb6862-b459-48db-885f-3dd8da59d18a")
+		(property "Reference" "U3"
+			(at 168.91 113.03 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "ADP7118ARDZ-3.3"
+			(at 168.91 115.57 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "ADP7118ARDZ-1-8:RD-8-1_ADI"
+			(at 143.51 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/adp7118.pdf"
+			(at 143.51 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 143.51 123.19 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "7"
+			(uuid "77e8f539-6293-4f58-ac17-8fc8e1a6daa2")
+		)
+		(pin "8"
+			(uuid "c1d1caa4-59d9-4cc0-a6f3-8613b5ec7662")
+		)
+		(pin "1"
+			(uuid "152a63cb-b3b1-4f0a-bb24-032ee4915b7b")
+		)
+		(pin "2"
+			(uuid "61d480f3-6093-43e5-b33d-2d0b6548fcfd")
+		)
+		(pin "6"
+			(uuid "bd82e46e-906a-4049-9cf3-a5811774e22c")
+		)
+		(pin "4"
+			(uuid "0040ba40-68fc-4478-9668-0ff1de38fa93")
+		)
+		(pin "9"
+			(uuid "2e3aa40a-42bc-4c54-9756-800dcce1af81")
+		)
+		(pin "5"
+			(uuid "1cf5a8e8-fb8f-4d58-aa33-170d1993d421")
+		)
+		(pin "3"
+			(uuid "6229a422-1cff-4448-ad80-fab081f63da0")
+		)
+		(instances
+			(project ""
+				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
+					(reference "U3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C")
 		(at 307.34 128.27 90)
 		(unit 1)
@@ -10004,97 +10093,6 @@
 			(project "ADC"
 				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
 					(reference "#PWR041")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "1.8V LDO (SOIC):ADP7118ARDZ-1.8")
-		(at 58.42 123.19 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "6a27e981-13e0-42b0-8df5-edd2bbf6a0dd")
-		(property "Reference" "U4"
-			(at 83.82 113.03 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "ADP7118ARDZ-1.8"
-			(at 83.82 115.57 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "ADP7118ARDZ-1-8:RD-8-1_ADI"
-			(at 58.42 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/adp7118.pdf"
-			(at 58.42 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 58.42 123.19 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "7"
-			(uuid "b4906733-675d-4795-9b02-e241f6f4413b")
-		)
-		(pin "8"
-			(uuid "325c9060-a96b-43e6-a903-4c007f74d601")
-		)
-		(pin "4"
-			(uuid "28d40742-2dc0-4cb6-9657-6256f0fe8a93")
-		)
-		(pin "5"
-			(uuid "eba2a172-43e2-4f84-9c77-f2f506c1d9f7")
-		)
-		(pin "9"
-			(uuid "c22558c0-82d4-4397-8051-dcf2acee4f07")
-		)
-		(pin "1"
-			(uuid "02d62baf-7cbb-4ae4-a4c9-0a91979ed0f9")
-		)
-		(pin "2"
-			(uuid "a68d3c1d-75ba-40d2-a23c-55e8a0565eb4")
-		)
-		(pin "3"
-			(uuid "3c6265fb-1273-4b99-bdf8-a2881f21d9fa")
-		)
-		(pin "6"
-			(uuid "41428497-bf25-4c62-9e89-098565ceb530")
-		)
-		(instances
-			(project ""
-				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
-					(reference "U4")
 					(unit 1)
 				)
 			)
@@ -10501,6 +10499,94 @@
 		)
 	)
 	(symbol
+		(lib_id "LTC6655-1.25:LTC6655BHMS8-1.25-PBF")
+		(at 241.3 204.47 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7286d929-3a20-4815-814b-25921bcb796f")
+		(property "Reference" "U9"
+			(at 264.16 194.31 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "LTC6655BHMS8-1.25-PBF"
+			(at 264.16 196.85 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
+			(at 241.3 204.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
+			(at 241.3 204.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 241.3 204.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f6d5d982-0f68-4194-ad36-67c5e6cbfc7c")
+		)
+		(pin "2"
+			(uuid "e79bff7f-50a6-4229-bb47-d0704a4fd85d")
+		)
+		(pin "3"
+			(uuid "7bd06468-64dd-48c3-b763-9d900d8e1982")
+		)
+		(pin "4"
+			(uuid "422c016c-1a07-45ad-8317-a8086ae7157d")
+		)
+		(pin "5"
+			(uuid "f7e232c4-c7b4-4522-8932-4c56ff931335")
+		)
+		(pin "8"
+			(uuid "1125c529-e8d0-49ad-8d88-f79de687c706")
+		)
+		(pin "7"
+			(uuid "ccd80be8-1a67-4a07-87b1-255493b352fa")
+		)
+		(pin "6"
+			(uuid "af274cd2-bcc5-4221-bbe2-5045119c7c46")
+		)
+		(instances
+			(project "ADC"
+				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
+					(reference "U9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 91.44 77.47 0)
 		(unit 1)
@@ -10898,6 +10984,94 @@
 			(project "ADC"
 				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
 					(reference "C15")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "LTC6655-2.5:LTC6655BHMS8-2.5-PBF")
+		(at 87.63 173.99 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "81e5a9d0-abc8-48e4-b7ec-7e5164d1ab5c")
+		(property "Reference" "U6"
+			(at 110.49 163.83 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "LTC6655BHMS8-2.5-PBF"
+			(at 110.49 166.37 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "LTC6655BHMS8-2.5-PB:MSOP-8_MS_LIT"
+			(at 87.63 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
+			(at 87.63 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 87.63 173.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "05a805f3-d04c-4026-bc02-0745fe26ae19")
+		)
+		(pin "2"
+			(uuid "8391fbda-217c-4546-963b-3b9a0c622012")
+		)
+		(pin "3"
+			(uuid "5aeeaeeb-e283-4795-ac91-f5fac57eda94")
+		)
+		(pin "4"
+			(uuid "16dac23b-acdf-4cb8-8e8e-68a4f28e05e6")
+		)
+		(pin "5"
+			(uuid "36f34ddd-a8a0-4de3-8244-2f2f939d2d9d")
+		)
+		(pin "8"
+			(uuid "aee3eaea-25bc-4757-a880-760645cb258f")
+		)
+		(pin "7"
+			(uuid "5b37f04e-d339-475f-8156-95e3a49c658a")
+		)
+		(pin "6"
+			(uuid "b4f6f093-41f7-4e6d-a730-8c79aa0fdf0c")
+		)
+		(instances
+			(project ""
+				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
+					(reference "U6")
 					(unit 1)
 				)
 			)
@@ -11436,6 +11610,94 @@
 			(project "ADC"
 				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
 					(reference "#PWR029")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "LTC6655-1.25:LTC6655BHMS8-1.25-PBF")
+		(at 156.21 175.26 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "917b08a8-3074-4938-b567-4bcbaf405898")
+		(property "Reference" "U2"
+			(at 179.07 165.1 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "LTC6655BHMS8-1.25-PBF"
+			(at 179.07 167.64 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
+			(at 156.21 175.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
+			(at 156.21 175.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 156.21 175.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e8c27993-6052-4e24-ae37-8b396a745ee2")
+		)
+		(pin "2"
+			(uuid "92252b01-e9c7-497c-a12d-c4c31e3170c9")
+		)
+		(pin "3"
+			(uuid "b4af1c8c-a643-466a-a619-8ebc1efbc5b6")
+		)
+		(pin "4"
+			(uuid "7bbcedfa-f8a5-4f46-ba55-71283ae5aab9")
+		)
+		(pin "5"
+			(uuid "e051c020-c117-4df3-b1d4-b3535cb100a7")
+		)
+		(pin "8"
+			(uuid "17f16327-3d97-406f-89ff-83aa5dbeb76d")
+		)
+		(pin "7"
+			(uuid "cf13f24b-69d4-49a7-99f1-4ef086675190")
+		)
+		(pin "6"
+			(uuid "04b94d13-29df-4049-a650-669604227631")
+		)
+		(instances
+			(project ""
+				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
+					(reference "U2")
 					(unit 1)
 				)
 			)
@@ -12520,95 +12782,6 @@
 		)
 	)
 	(symbol
-		(lib_name "LTC6655BHMS8-1.25-PBF_1")
-		(lib_id "LTC6655-NR-1.25:LTC6655BHMS8-1.25-PBF")
-		(at 156.21 175.26 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "b4cf9ff0-b200-428d-a08a-2c539253336d")
-		(property "Reference" "U2"
-			(at 179.07 165.1 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "LTC6655BHMS8-1.25-PBF"
-			(at 179.07 167.64 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
-			(at 156.21 175.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
-			(at 156.21 175.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 156.21 175.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "3"
-			(uuid "31945a27-4dff-442d-921b-3393ee9be7d8")
-		)
-		(pin "2"
-			(uuid "2427d953-269a-47f0-8bb1-b0110fc86ff2")
-		)
-		(pin "1"
-			(uuid "96401deb-cde1-4c0c-b41e-b3c038cb9af2")
-		)
-		(pin "8"
-			(uuid "3b413cb4-59f8-4365-bc81-67b5a2b353bb")
-		)
-		(pin "4"
-			(uuid "4fdb935e-622b-4267-b5f3-0695f46c5f48")
-		)
-		(pin "7"
-			(uuid "c61d43cd-261a-4ffa-8409-130e25d74b93")
-		)
-		(pin "6"
-			(uuid "73a15ed4-1506-48e7-9535-0fa416c68004")
-		)
-		(pin "5"
-			(uuid "0bc4a31d-8a5c-425d-97b5-af7a61d30851")
-		)
-		(instances
-			(project "ADC"
-				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
-					(reference "U2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Jumper:SolderJumper_3_Open")
 		(at 241.3 132.08 90)
 		(unit 1)
@@ -13553,95 +13726,6 @@
 		)
 	)
 	(symbol
-		(lib_name "LTC6655BHMS8-1.25-PBF_1")
-		(lib_id "LTC6655-NR-1.25:LTC6655BHMS8-1.25-PBF")
-		(at 241.3 204.47 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "da660b79-6fbf-40dc-aeea-148d68fe4aa4")
-		(property "Reference" "U9"
-			(at 264.16 194.31 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "LTC6655BHMS8-1.25-PBF"
-			(at 264.16 196.85 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
-			(at 241.3 204.47 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
-			(at 241.3 204.47 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 241.3 204.47 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "3"
-			(uuid "8f151533-78ca-486d-9b56-c452ef220caa")
-		)
-		(pin "2"
-			(uuid "c1e4b316-8446-4a94-8b8f-b4ec716149fc")
-		)
-		(pin "1"
-			(uuid "70403233-bd83-4c98-8074-1096deaf0896")
-		)
-		(pin "8"
-			(uuid "b1d29e3a-0ae3-4437-9cce-7197d8974fc2")
-		)
-		(pin "4"
-			(uuid "a913d214-f8e0-476b-9647-b6051a10dbd9")
-		)
-		(pin "7"
-			(uuid "01c62add-410c-44c0-9378-2efe00a6b4b1")
-		)
-		(pin "6"
-			(uuid "7d6077ce-6815-49f7-befc-47906d5758f0")
-		)
-		(pin "5"
-			(uuid "495e1492-4090-447b-b4b8-c141470cd513")
-		)
-		(instances
-			(project "ADC"
-				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
-					(reference "U9")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_name "VCC_2")
 		(lib_id "power:VCC")
 		(at 323.85 120.65 0)
@@ -14161,94 +14245,6 @@
 				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
 					(reference "U8")
 					(unit 2)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "LTC6655-NR-2.5:LTC6655BHMS8-2.5-PBF")
-		(at 87.63 173.99 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e7f4ec3c-db3a-44a4-b051-b3eb1b3b8e6d")
-		(property "Reference" "U6"
-			(at 110.49 163.83 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Value" "LTC6655BHMS8-2.5-PBF"
-			(at 110.49 166.37 0)
-			(effects
-				(font
-					(size 1.524 1.524)
-				)
-			)
-		)
-		(property "Footprint" "LTC6655BHMS8-1.25-PB:MSOP-8_MS_LIT"
-			(at 87.63 173.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://www.analog.com/media/en/technical-documentation/data-sheets/LTC6655-6655LN.pdf"
-			(at 87.63 173.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-					(italic yes)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 87.63 173.99 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "8"
-			(uuid "1753e5b0-6f2b-47a6-bed1-170357016f1c")
-		)
-		(pin "7"
-			(uuid "da548a03-925e-4046-a63c-1b42f809d8f6")
-		)
-		(pin "6"
-			(uuid "23484597-291f-4365-b4cc-f84ef0bbc00d")
-		)
-		(pin "1"
-			(uuid "b122e776-a50a-4330-ac46-ad8da3a0592e")
-		)
-		(pin "2"
-			(uuid "e6fb310a-a49c-4f81-bc37-be3331111088")
-		)
-		(pin "3"
-			(uuid "1193f000-7860-45f8-be40-13abed255f76")
-		)
-		(pin "4"
-			(uuid "ae1c5f98-287a-403b-97b9-aa93e58190ca")
-		)
-		(pin "5"
-			(uuid "4680ccfd-72a8-420b-85a6-9bfb318d0ede")
-		)
-		(instances
-			(project ""
-				(path "/af124310-bb30-42bd-a3e5-ceab7bdec90d"
-					(reference "U6")
-					(unit 1)
 				)
 			)
 		)
