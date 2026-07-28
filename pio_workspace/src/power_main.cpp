@@ -7,6 +7,7 @@
 #include "ThrusterControl.h"
 #include "adc_sensors.h"
 #include "TMP36.h"
+#include "custom_cores.h"
 
 #include <micro_ros_arduino.h>
 
@@ -22,7 +23,7 @@
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
-
+#define KS_PIN 10
 
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
@@ -72,12 +73,12 @@ void error_loop() {
     digitalWrite(LED_PIN, HIGH);
 }
 
-enum states {
+enum microros_states {
   WAITING_AGENT,
   AGENT_AVAILABLE,
   AGENT_CONNECTED,
   AGENT_DISCONNECTED
-} state;
+} microros_state;
 
 void propulsion_microseconds_callback(const void * msgin)
 {  
@@ -189,6 +190,15 @@ void destroy_entities() {
   connectUSB();
 }
 
+float voltage[2] = {0.0, 0.0};
+
+enum power_states {
+    DUAL_BATTERY,
+    SINGLE_BATTERY,
+    LOW_VOLTAGE,
+    NO_VOLTAGE
+} power_state;
+
 void senseData() {
   power_board_temperature_msg.data = temperatureSensor.readTemperature();
 
@@ -202,10 +212,16 @@ void senseData() {
   float* voltage_data = adcSensors.senseVoltage();
   for (size_t i = 0; i < 2; i++) {
       power_batteries_voltage_msg.data.data[i] = voltage_data[i];
+      voltage[i] = voltage_data[i];
   }
 }
 
 void power_setup() {
+  pinModeOutputHigh(KS_PIN);
+  digitalWrite(KS_PIN, HIGH);
+
+  power_state = LOW_VOLTAGE;
+
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
 
@@ -260,46 +276,102 @@ void power_setup() {
   power_board_temperature_msg.data = -2.0;
   power_teensy_temperature_msg.data = -2.0;
 
-  // first state
-  state = WAITING_AGENT;
+  // first microros_state
+  microros_state = WAITING_AGENT;
+  digitalWrite(LED_PIN, LOW);
 }
 
-void power_loop() {
-  senseData();
+int16_t limited_microseconds[8];
 
-  switch (state) {
-    case WAITING_AGENT:
-      updateThrusters(offCommand);
-      EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+void check_power_state() {
+  if (voltage[0] >= 15 && voltage[1] >= 15 && abs(voltage[0] - voltage[1]) <= 0.06) {
+    power_state = DUAL_BATTERY;
+    digitalWrite(KS_PIN, LOW);
+  } else if (voltage[0] >= 15 || voltage[1] >= 15) {
+    power_state = SINGLE_BATTERY;
+    digitalWrite(KS_PIN, LOW);
+  } else if (voltage[0] >= 13.8 || voltage[1] >= 13.8) {
+    power_state = LOW_VOLTAGE;
+    digitalWrite(KS_PIN, HIGH);
+    // send signal to kill in microros
+  } else {
+    power_state = NO_VOLTAGE;
+    digitalWrite(KS_PIN, HIGH);
+    destroy_entities(); // need to ensure killed in microros
+    // somehow enter teensy low power mode
+    // not recoverable, will loop forever
+    while (1) {
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+      digitalWrite(LED_PIN, LOW);
+      delay(200);
+    }
+  }
+}
+
+void applyPowerLimitsAndUpdateThrusters() {
+  for (int i = 0; i < 8; i++) {
+    limited_microseconds[i] = microseconds[i];
+  }
+
+  switch (power_state) {
+    case DUAL_BATTERY:
       break;
-    case AGENT_AVAILABLE:
-      updateThrusters(offCommand);
-      state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
-      if (state == WAITING_AGENT) {
-        destroy_entities();
-      };
-      break;
-    case AGENT_CONNECTED:
-      EXECUTE_EVERY_N_MS(50, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
-      if (state == AGENT_CONNECTED) {
-        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-        updateThrusters(microseconds);
-      } else {
-        updateThrusters(offCommand);
+    case SINGLE_BATTERY:
+      for (int i = 0; i < 8; i++) {
+        limited_microseconds[i] = constrain(limited_microseconds[i], 1250, 1750);
       }
       break;
-    case AGENT_DISCONNECTED:
-      destroy_entities();
-      state = WAITING_AGENT;
+    case LOW_VOLTAGE:
+      for (int i = 0; i < 8; i++) {
+        limited_microseconds[i] = 1500;
+      }
+      break;
+    case NO_VOLTAGE:
+      for (int i = 0; i < 8; i++) {
+        limited_microseconds[i] = 1500;
+      }
       break;
     default:
       break;
   }
 
-  if (state == AGENT_CONNECTED) {
-    digitalWrite(LED_PIN, 1);
-  } else {
-    digitalWrite(LED_PIN, 0);
+  updateThrusters(limited_microseconds);
+}
+
+void power_loop() {
+  senseData();
+  check_power_state();
+
+  switch (microros_state) {
+    case WAITING_AGENT:
+      updateThrusters(offCommand);
+      EXECUTE_EVERY_N_MS(500, microros_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      break;
+    case AGENT_AVAILABLE:
+      updateThrusters(offCommand);
+      microros_state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
+      if (microros_state == WAITING_AGENT) {
+        destroy_entities();
+      };
+      break;
+    case AGENT_CONNECTED:
+      EXECUTE_EVERY_N_MS(50, microros_state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
+      if (microros_state == AGENT_CONNECTED) {
+        rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+        applyPowerLimitsAndUpdateThrusters();
+        digitalWrite(LED_PIN, 1);
+      } else {
+        updateThrusters(offCommand);
+        digitalWrite(LED_PIN, 0);
+      }
+      break;
+    case AGENT_DISCONNECTED:
+      destroy_entities();
+      microros_state = WAITING_AGENT;
+      break;
+    default:
+      break;
   }
 }
 

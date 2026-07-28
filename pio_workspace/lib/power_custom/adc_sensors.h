@@ -5,6 +5,8 @@ Commenter: Dorothy Ma
 HEADER FILE FOR ADC_SENSOR FOR CURRENT & VOLTAGE SENSING
 */
 
+#ifdef POWER_H
+
 #ifndef ADC_SENSORS_H
 #define ADC_SENSORS_H
 
@@ -58,5 +60,7 @@ class ADCSensors {
     float convertVoltage(float adcVoltage);
     float convertCurrent(float adcCurrent);
 };
+
+#endif
 
 #endif

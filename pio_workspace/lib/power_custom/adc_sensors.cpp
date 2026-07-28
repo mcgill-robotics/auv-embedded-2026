@@ -7,6 +7,8 @@ FUNCTIONS TO USE VOLTAGE- AND CURRENT-SENSING WITH ADCS:
 2) call "senseVoltage()" and "senseCurrent()" to retrieve updated measurements
 */
 
+#ifdef POWER_H
+
 #include "adc_sensors.h"
 /* 
   Constructor for empty ADCSensor object:
@@ -135,3 +137,5 @@ float ADCSensors::convertCurrent(float adcCurrent) {
   */
   return (((adcCurrent * 2 ) / 50 ) / 0.005);
 }
+
+#endif
