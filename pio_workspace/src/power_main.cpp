@@ -3,6 +3,7 @@
 #include "power_main.h"
 
 #include <Arduino.h>
+#include <digitalWriteFast.h>
 
 #include "ThrusterControl.h"
 #include "adc_sensors.h"
@@ -22,6 +23,8 @@
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
+#define WATER_PIN 11
+#define KS_PIN 10
 
 
 #define ENABLE_VOLTAGE_SENSE true
@@ -205,9 +208,28 @@ void senseData() {
   }
 }
 
+// IRQ for when water is detected
+void water_detected(){
+  // Intense Mode: kill thrusters, system kill, to be discussed << Current implementation
+  // Milder / Pool Test Mode: send message to jetson for display, kill thrusters?
+  digitalWrite(KS_PIN, HIGH);
+  // digitalWrite(LED_PIN, LOW);
+}
+
 void power_setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);
+  pinMode(WATER_PIN, INPUT_PULLDOWN);
+  pinMode(KS_PIN, INPUT_PULLUP);
+
+  delay(5000);
+  
+  // Do all safety checks, during this time System KS is HIGH (system off)
+  pinMode(KS_PIN, OUTPUT); // System KS set to LOW (system armed)
+  digitalWrite(KS_PIN, LOW);
+
+  // Start Setup Code Here
+  attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
 
   initThrusters();
 
