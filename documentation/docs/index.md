@@ -17,3 +17,14 @@ The KiCAD project can be found under the `kicad` folder. The project is organize
   - `kicad/libraries/3dmodels` contains all the 3D models used in the project
 
 If for some reason a component's footprint or symbol is not found, double check the include path in `Preferences -> Configure Paths`
+
+## Recent changes (design updates)
+
+### August 3rd, 2026
+
+We couldn't find a 100nF ceramic capacitor with package 0603 (1608 metric) for `C18` and `C21` which also have a rated voltage > 8.5V (as they are used to decouple output of charge pump inverter). So we opted for a different package (bigger) = 1206
+
+The BOM can be found in [HERE](design/files/ADC%20BOM.csv)
+
+The zipped Gerber/Drill folder for JLCPCB ordering can be found [HERE](design/files/Aug3Exportv2.zip)
+

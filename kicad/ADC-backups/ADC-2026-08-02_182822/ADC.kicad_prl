@@ -4,9 +4,7 @@
     "active_layer_preset": "",
     "auto_track_width": true,
     "hidden_netclasses": [],
-    "hidden_nets": [
-      "GND"
-    ],
+    "hidden_nets": [],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
@@ -39,6 +37,7 @@
       "grid",
       "footprints_front",
       "footprints_back",
+      "footprint_values",
       "footprint_references",
       "tracks",
       "drc_errors",
@@ -47,11 +46,14 @@
       "pads",
       "zones",
       "drc_warnings",
+      "drc_exclusions",
       "locked_item_shadows",
       "conflict_shadows",
-      "shapes"
+      "shapes",
+      "board_outline_area",
+      "ly_points"
     ],
-    "visible_layers": "ffffffff_ffffffff_ffffffff_ffff55ff",
+    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffffff",
     "zone_display_mode": 0
   },
   "git": {
@@ -65,42 +67,9 @@
     "version": 5
   },
   "net_inspector_panel": {
-    "col_hidden": [
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false,
-      false
-    ],
-    "col_order": [
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
-    ],
-    "col_widths": [
-      156,
-      141,
-      103,
-      71,
-      103,
-      103,
-      103,
-      74,
-      103,
-      103
-    ],
+    "col_hidden": [],
+    "col_order": [],
+    "col_widths": [],
     "custom_group_rules": [],
     "expanded_rows": [],
     "filter_by_net_name": true,
@@ -112,7 +81,7 @@
     "show_unconnected_nets": false,
     "show_zero_pad_nets": false,
     "sort_ascending": true,
-    "sorting_column": 0
+    "sorting_column": -1
   },
   "open_jobsets": [],
   "project": {
